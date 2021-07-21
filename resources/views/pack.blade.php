@@ -4,9 +4,9 @@
     <div class="container youplay-store">
         <div class="col-md-8 pr-50">
             <article>
-                <h2 class="mt-0">Description Pack {{ $pack->evenement }}</h2><div class="side-block"><h4 class="block-title" style="width: 80px">{{ $pack->prix }}</h4></div>
+                <h2 class="mt-0">Description Pack {{ $pack->evenement }}</h2><div class="side-block"><h4 class="block-title" style="width: 80px">{{ $pack->prix }}€</h4></div>
                 <div class="description">
-                    <p>{{ $pack->description_pack }}</p>
+                    <p>{!! nl2br($pack->description_pack) !!}</p>
                 </div>
                 <div class="btn-group social-list social-likes" data-counters="no">
                     <span class="btn btn-default facebook" title="Partager sur Facebook"></span>
@@ -50,13 +50,13 @@
                                             <div class="panel panel-default">
                                                 <div class="panel-heading" role="tab" id="headingOne">
                                                     <h4 class="panel-title">
-                                                        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne"> Ajouter un cadeau <span class="icon-plus"></span>
+                                                        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne"> Ajouter un cadeau (ou message) <span class="icon-plus"></span>
                                                         </a>
                                                     </h4>
                                                 </div>
                                                 <div id="collapseOne" class="panel-collapse collapse panel-cadeau-input" role="tabpanel" aria-labelledby="headingOne">
                                                     <div class="youplay-input">
-                                                        <input id="cadeau-1" type="text" name="cadeau-1" placeholder="Nom du cadeau">
+                                                        <input id="cadeau-1" type="text" name="cadeau-1" placeholder="Nom du cadeau / Message">
                                                     </div> 
                                                 </div>
                                             </div>
@@ -65,13 +65,13 @@
                                             <div class="panel panel-default">
                                                 <div class="panel-heading" role="tab" id="headingTwo">
                                                     <h4 class="panel-title">
-                                                        <a class="collapsed" class="add-cadeau" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo"> Ajouter un cadeau <span class="icon-plus"></span>
+                                                        <a class="collapsed" class="add-cadeau" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo"> Ajouter un cadeau (ou message) <span class="icon-plus"></span>
                                                         </a>
                                                     </h4>
                                                 </div>
                                                 <div id="collapseTwo" class="panel-collapse collapse panel-cadeau-input" role="tabpanel" aria-labelledby="headingTwo">
                                                     <div class="youplay-input">
-                                                        <input id="cadeau-2" type="text" name="cadeau-2" placeholder="Nom du cadeau">
+                                                        <input id="cadeau-2" type="text" name="cadeau-2" placeholder="Nom du cadeau / Message">
                                                     </div> 
                                                 </div>
                                             </div>
@@ -82,13 +82,13 @@
                                             <div class="panel panel-default">
                                                 <div class="panel-heading" role="tab" id="headingThree">
                                                     <h4 class="panel-title">
-                                                        <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree"> Ajouter un cadeau <span class="icon-plus"></span>
+                                                        <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree"> Ajouter un cadeau (ou message) <span class="icon-plus"></span>
                                                         </a>
                                                     </h4>
                                                 </div>
                                                 <div id="collapseThree" class="panel-collapse collapse panel-cadeau-input" role="tabpanel" aria-labelledby="headingThree">
                                                     <div class="youplay-input">
-                                                        <input id="cadeau-3" type="text" name="cadeau-3" placeholder="Nom du cadeau">
+                                                        <input id="cadeau-3" type="text" name="cadeau-3" placeholder="Nom du cadeau / Message">
                                                     </div> 
                                                 </div>
                                             </div>
@@ -97,13 +97,13 @@
                                             <div class="panel panel-default">
                                                 <div class="panel-heading" role="tab" id="headingFour">
                                                     <h4 class="panel-title">
-                                                        <a class="collapsed" class="add-cadeau" data-toggle="collapse" data-parent="#accordion" href="#collapseFour" aria-expanded="false" aria-controls="collapseTwo"> Ajouter un cadeau <span class="icon-plus"></span>
+                                                        <a class="collapsed" class="add-cadeau" data-toggle="collapse" data-parent="#accordion" href="#collapseFour" aria-expanded="false" aria-controls="collapseTwo"> Ajouter un cadeau (ou message) <span class="icon-plus"></span>
                                                         </a>
                                                     </h4>
                                                 </div>
                                                 <div id="collapseFour" class="panel-collapse collapse panel-cadeau-input" role="tabpanel" aria-labelledby="headingFour">
                                                     <div class="youplay-input">
-                                                        <input id="cadeau-4" type="text" name="cadeau-4" placeholder="Nom du cadeau">
+                                                        <input id="cadeau-4" type="text" name="cadeau-4" placeholder="Nom du cadeau / Message">
                                                     </div> 
                                                 </div>
                                             </div>
@@ -182,38 +182,38 @@
                     <form id="ennemi-form">
                         <div class="row youplay-radio form-check-inline"> 
                             <div class="row-img col-md-6">
-                                <img src="assets/images/fetesvosjeux/ennemi/cochon_1.png" alt="cochon_1" width="100px">
-                                <input class="form-check-input btn-ennemi" type="radio" name="choix-ennemi" id="cochon_1" value="cochon_1" checked>
-                                <label class="form-check-label" for="cochon_1"></label>
+                                <img src="assets/images/fetesvosjeux/ennemi/cochon_1.png" alt="ennemi_1" width="100px">
+                                <input class="form-check-input btn-ennemi" type="radio" name="choix-ennemi" id="ennemi_1" value="ennemi_1" checked>
+                                <label class="form-check-label" for="ennemi_1"></label>
                             </div>
                             <div class="row-img col-md-6">
-                                <img src="assets/images/fetesvosjeux/ennemi/cochon_4.png" alt="cochon_4" width="100px">
-                                <input class="form-check-input btn-ennemi" type="radio" name="choix-ennemi" id="cochon_4" value="cochon_4">
-                                <label class="form-check-label" for="cochon_4"></label>
+                                <img src="assets/images/fetesvosjeux/ennemi/cochon_4.png" alt="ennemi_4" width="100px">
+                                <input class="form-check-input btn-ennemi" type="radio" name="choix-ennemi" id="ennemi_4" value="ennemi_4">
+                                <label class="form-check-label" for="ennemi_4"></label>
                             </div>     
                         </div>
                         <div class="row youplay-radio form-check-inline"> 
                             <div class="row-img col-md-6">
-                                <img src="assets/images/fetesvosjeux/ennemi/cochon_2.png" alt="cochon_2" width="100px">
-                                <input class="form-check-input btn-ennemi" type="radio" name="choix-ennemi" id="cochon_2" value="cochon_2">
-                                <label class="form-check-label" for="cochon_2"></label>
+                                <img src="assets/images/fetesvosjeux/ennemi/cochon_2.png" alt="ennemi_2" width="100px">
+                                <input class="form-check-input btn-ennemi" type="radio" name="choix-ennemi" id="ennemi_2" value="ennemi_2">
+                                <label class="form-check-label" for="ennemi_2"></label>
                             </div>
                             <div class="row-img col-md-6">
-                                <img src="assets/images/fetesvosjeux/ennemi/cochon_5.png" alt="cochon_5" width="100px">
-                                <input class="form-check-input btn-ennemi" type="radio" name="choix-ennemi" id="cochon_5" value="cochon_5">
-                                <label class="form-check-label" for="cochon_5"></label>
+                                <img src="assets/images/fetesvosjeux/ennemi/cochon_5.png" alt="ennemi_5" width="100px">
+                                <input class="form-check-input btn-ennemi" type="radio" name="choix-ennemi" id="ennemi_5" value="ennemi_5">
+                                <label class="form-check-label" for="ennemi_5"></label>
                             </div>     
                         </div>
                         <div class="row youplay-radio form-check-inline"> 
                             <div class="row-img col-md-6">
-                                <img src="assets/images/fetesvosjeux/ennemi/cochon_3.png" alt="cochon_3" width="100px">
-                                <input class="form-check-input btn-ennemi" type="radio" name="choix-ennemi" id="cochon_3" value="cochon_3">
-                                <label class="form-check-label" for="cochon_3"></label>
+                                <img src="assets/images/fetesvosjeux/ennemi/cochon_3.png" alt="ennemi_3" width="100px">
+                                <input class="form-check-input btn-ennemi" type="radio" name="choix-ennemi" id="ennemi_3" value="ennemi_3">
+                                <label class="form-check-label" for="ennemi_3"></label>
                             </div>
                             <div class="row-img col-md-6">
-                                <img src="assets/images/fetesvosjeux/ennemi/cochon_6.png" alt="cochon_6" width="100px">
-                                <input class="form-check-input btn-ennemi" type="radio" name="choix-ennemi" id="cochon_6" value="cochon_6">
-                                <label class="form-check-label" for="cochon_6"></label>
+                                <img src="assets/images/fetesvosjeux/ennemi/cochon_6.png" alt="ennemi_6" width="100px">
+                                <input class="form-check-input btn-ennemi" type="radio" name="choix-ennemi" id="ennemi_6" value="ennemi_6">
+                                <label class="form-check-label" for="ennemi_6"></label>
                             </div>     
                         </div>      
                     </form>

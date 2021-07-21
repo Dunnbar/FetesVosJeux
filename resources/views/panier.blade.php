@@ -3,7 +3,7 @@
 @section('page')
     <div class="container youplay-content mt-0">
         <div class="col-md-8 pr-50">
-            <h2>Personne concernée</h2>
+            <!-- <h2>Personne concernée</h2>
             <div class="row">
                 <div class="col-md-6">
                     <p>Email pour le cadeau :</p>
@@ -19,23 +19,23 @@
                     </div>
                     <p id="erreur-date-cadeau" class="erreur-msg">Veuillez entrer une date correcte</p>
                 </div>
-            </div>
+            </div> -->
 
             <h2>Informations de paiement</h2>
             <div class="row">
-                <div class="col-md-6">
-                    <p>Nom :</p>
-                    <div class="youplay-input">
-                        <input id="nom" type="text" name="billing_firstname" placeholder="Nom">
-                    </div>
-                    <p id="erreur-nom" class="erreur-msg">Ce champ ne peut pas être vide</p>
-                </div>
                 <div class="col-md-6">
                     <p>Prénom :</p>
                     <div class="youplay-input">
                         <input id="prenom" type="text" name="billing_lastname" placeholder="Prénom">
                     </div>
                     <p id="erreur-prenom" class="erreur-msg">Ce champ ne peut pas être vide</p>
+                </div>
+                <div class="col-md-6">
+                    <p>Nom :</p>
+                    <div class="youplay-input">
+                        <input id="nom" type="text" name="billing_firstname" placeholder="Nom">
+                    </div>
+                    <p id="erreur-nom" class="erreur-msg">Ce champ ne peut pas être vide</p>
                 </div>
             </div>
             <!-- <p>Adresse :</p>
@@ -347,22 +347,22 @@
 
         // Vérifie que les champs soient remplis
         function valideChampsPanier() {
-            if ($('#email-cadeau').val().length < 1) {
-                $('.erreur-msg').hide();
-                $('#erreur-email-cadeau').show();
-                return false
-            } 
-            else if (!$('#date-cadeau').val()) {
-                $('.erreur-msg').hide();
-                $('#erreur-date-cadeau').show();
-                return false
-            }
-            else if ($('#date-cadeau').val() < Date.now()) {
-                $('.erreur-msg').hide();
-                $('#erreur-date-cadeau').show();
-                return false
-            }
-            else if ($('#nom').val().length < 1) {
+            // if ($('#email-cadeau').val().length < 1) {
+            //     $('.erreur-msg').hide();
+            //     $('#erreur-email-cadeau').show();
+            //     return false
+            // } 
+            // else if (!$('#date-cadeau').val()) {
+            //     $('.erreur-msg').hide();
+            //     $('#erreur-date-cadeau').show();
+            //     return false
+            // }
+            // else if ($('#date-cadeau').val() < Date.now()) {
+            //     $('.erreur-msg').hide();
+            //     $('#erreur-date-cadeau').show();
+            //     return false
+            // }
+            if ($('#nom').val().length < 1) {
                 $('.erreur-msg').hide();
                 $('#erreur-nom').show();
                 return false
@@ -403,8 +403,8 @@
             jform.append('cadeau_2', panier.cadeau_2);
             jform.append('cadeau_3', panier.cadeau_3);
             jform.append('cadeau_4', panier.cadeau_4);
-            jform.append('date_cadeau', $('#date-cadeau').val());
-            jform.append('email_cadeau', $('#email-cadeau').val());
+            // jform.append('date_cadeau', $('#date-cadeau').val());
+            // jform.append('email_cadeau', $('#email-cadeau').val());
             jform.append('payeur_nom', $('#nom').val());
             jform.append('payeur_prenom', $('#prenom').val());
             jform.append('payeur_email', $('#email').val());

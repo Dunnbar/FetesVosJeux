@@ -7,17 +7,16 @@ use Illuminate\Http\Request;
 
 class APIController extends Controller
 {
-    public function commande($id)
+    public function commande($id_commande)
     {
-        $commande = Commande::where('id_commande', '=', $id)->first();
+        $commande = Commande::where('id_commande', '=', $id_commande)->first();
 
         if ($commande) {
-            return response()->json([$commande]);
+            // ajouter derniere connection + nb de connections
+            return response()->json($commande);
         } 
         else {
-            return response()->json([
-                'message' => 'Aucune commande trouvée pour cette ID'
-            ]);
+            abort(404);
         }
     }
 }

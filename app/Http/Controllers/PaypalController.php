@@ -50,7 +50,7 @@ class PaypalController extends Controller
     	$item_1 = new Item();
 
         $item_1->setName('Product 1')
-            ->setCurrency('USD')
+            ->setCurrency('EUR')
             ->setQuantity(1)
             ->setPrice(15);
 
@@ -58,7 +58,7 @@ class PaypalController extends Controller
         $item_list->setItems(array($item_1));
 
         $amount = new Amount();
-        $amount->setCurrency('USD')
+        $amount->setCurrency('EUR')
             ->setTotal(15);
 
         $transaction = new Transaction();

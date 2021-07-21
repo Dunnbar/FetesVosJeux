@@ -1,8 +1,11 @@
 @component('mail::message')
 # Merci pour votre achat {{ $commande['payeur_prenom'] }} ! 
 
-Un lien de téléchargement pour votre jeu personnalisé sera envoyé à {{ $commande['email_cadeau'] }} le {{ $commande['date_cadeau'] }} !
+Voici le lien de téléchargement pour le jeu personnalisé ainsi que le code cadeau à rentrer.
 
+Lien de l'application : 
+<br>
+Code cadeau : <strong>{{ $commande['id_commande'] }}</strong>
 
 <!-- 
 @component('mail::button', ['url' => ''])

@@ -18,4 +18,4 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('commande/{id}', 'APIController@commande');
+Route::get('commande/{id_commande}', 'APIController@commande');
