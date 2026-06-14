@@ -87,6 +87,21 @@ body {
     transform: translate(-2px, -2px);
     box-shadow: 7px 7px 0 0 var(--color-gold);
   }
+
+  /* Bouton outline — pour les CTAs secondaires (ex: "Voir la démo"). */
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2
+           text-[var(--color-ink)]
+           px-6 py-3 font-bold uppercase tracking-wider text-sm
+           border-2 border-[var(--color-ink)]
+           rounded-full bg-transparent
+           transition-[transform,background,box-shadow] duration-150;
+  }
+  .btn-outline:hover {
+    background: var(--color-cream-2);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 0 var(--color-ink);
+  }
   .btn-primary:active {
     transform: translate(2px, 2px);
     box-shadow: 2px 2px 0 0 var(--color-gold);
@@ -136,3 +151,44 @@ body {
     color: var(--color-night-text);
   }
 }
+
+/* ============================================================
+   Animations
+   ============================================================ */
+
+/* Loop "scratch reveal" : la couche cover (photo) "disparaît"
+   progressivement comme si on grattait, puis revient. Utilisé sur
+   la mini-démo du hero pour donner vie au produit sans interaction. */
+@keyframes hero-scratch-loop {
+  0%, 18% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  45%, 70% {
+    opacity: 0.05;
+    clip-path: inset(0 0 0 0);
+  }
+  92%, 100% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Sparkle qui scintille pendant le moment de la révélation. */
+@keyframes hero-sparkle {
+  0%, 30%, 80%, 100% {
+    opacity: 0;
+    transform: scale(0.5) rotate(0deg);
+  }
+  45%, 65% {
+    opacity: 1;
+    transform: scale(1) rotate(15deg);
+  }
+}
+
+/* Léger float pour donner une vie organique aux mini-cartes. */
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%      { transform: translateY(-6px) rotate(-2deg); }
+}
+
