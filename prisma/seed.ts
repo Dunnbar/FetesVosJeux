@@ -16,7 +16,7 @@ const baseAnnonce = {
   coverImagePath: "/uploads/demo-cover.jpg",
   annonceMode: "text" as const,
   annonceTemplate: "mariage",
-  annonceTitle: "Guillemette & Dimitri",
+  annonceTitle: "Margaux & Antoine",
   annonceSubtitle: "se marient",
   annonceBody:
     "Le 14 septembre 2026 à Étretat — Save the date, plus d'infos très bientôt",

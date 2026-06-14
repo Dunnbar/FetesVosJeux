@@ -180,10 +180,15 @@ export function ScratchCanvas({
       lastPointRef.current = null;
     };
 
+    // Souris : down sur le canvas (déclenche), mais move/up sur le DOCUMENT
+    // pour que le drag continue même si le curseur sort temporairement du
+    // cadre (cas classique : on gratte vite, on dépasse les bords, on revient).
     canvas.addEventListener("mousedown", handleStart);
-    canvas.addEventListener("mousemove", handleMove);
-    canvas.addEventListener("mouseup", handleEnd);
-    canvas.addEventListener("mouseleave", handleEnd);
+    document.addEventListener("mousemove", handleMove);
+    document.addEventListener("mouseup", handleEnd);
+
+    // Tactile : tout reste sur le canvas — le navigateur "capture" le doigt
+    // une fois posé, même si on déborde un peu visuellement.
     canvas.addEventListener("touchstart", handleStart, { passive: false });
     canvas.addEventListener("touchmove", handleMove, { passive: false });
     canvas.addEventListener("touchend", handleEnd);
@@ -191,9 +196,8 @@ export function ScratchCanvas({
 
     return () => {
       canvas.removeEventListener("mousedown", handleStart);
-      canvas.removeEventListener("mousemove", handleMove);
-      canvas.removeEventListener("mouseup", handleEnd);
-      canvas.removeEventListener("mouseleave", handleEnd);
+      document.removeEventListener("mousemove", handleMove);
+      document.removeEventListener("mouseup", handleEnd);
       canvas.removeEventListener("touchstart", handleStart);
       canvas.removeEventListener("touchmove", handleMove);
       canvas.removeEventListener("touchend", handleEnd);
