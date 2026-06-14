@@ -7,12 +7,12 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  // directUrl utilisé par les migrations en cas de connexion pooled.
-  // Neon expose deux URLs : une pooled (DATABASE_URL) et une directe
-  // (DIRECT_URL). Si DIRECT_URL n'est pas défini, fallback sur DATABASE_URL.
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // Connexion directe (non-pooled) utilisée par les migrations.
+  // Nom aligné sur ce qu'injecte l'intégration Vercel↔Neon (auto-injecté
+  // côté Vercel). En local, voir .env qui définit la même variable.
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 /// Une carte à gratter = ce que l'acheteur crée et envoie.
