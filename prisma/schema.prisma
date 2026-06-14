@@ -1,0 +1,70 @@
+// Fêtes Vos Jeux — schéma Prisma
+// Postgres (Neon en prod, branch dev pour le local — voir DEPLOY.md).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // directUrl utilisé par les migrations en cas de connexion pooled.
+  // Neon expose deux URLs : une pooled (DATABASE_URL) et une directe
+  // (DIRECT_URL). Si DIRECT_URL n'est pas défini, fallback sur DATABASE_URL.
+  directUrl = env("DIRECT_URL")
+}
+
+/// Une carte à gratter = ce que l'acheteur crée et envoie.
+/// `code` est un identifiant court et URL-safe utilisé dans le lien
+/// public partagé au destinataire : /g/<code>
+///
+/// La structure du produit :
+///   1. L'acheteur uploade une COUVERTURE (souvent une photo : couple,
+///      famille, portrait…) qui sera l'image grattable au-dessus.
+///   2. Il choisit ce qui apparaît une fois la couverture grattée :
+///      - soit une autre image qu'il uploade (`annonceMode = "image"`)
+///      - soit une annonce texte selon un template (mariage / naissance /
+///        anniversaire…) dont il remplit les champs (`annonceMode = "text"`)
+model Scratch {
+  code String @id // ex: "K7M3PQ8X42"
+
+  // Mécanique d'interaction pour révéler l'annonce.
+  // Valeurs : "scratch" | "polaroid" | "envelope" | "champagne" | "ink"
+  revealMechanic String @default("scratch")
+
+  // L'image (cover) — toujours présente, son usage varie selon la mécanique :
+  //   - scratch     : photo grattable au-dessus de l'annonce
+  //   - polaroid    : photo qui se "développe" dans le cadre Polaroid
+  //   - envelope    : photo imprimée sur la carte qui sort de l'enveloppe
+  //   - champagne   : photo sur l'étiquette de la bouteille
+  //   - ink         : photo / motif sous le parchemin
+  coverImagePath String // ex: "/uploads/abc.jpg"
+
+  // L'annonce révélée en dessous : image OU texte selon un template.
+  annonceMode      String  @default("text") // "text" | "image"
+  annonceImagePath String? // utilisé si annonceMode = "image"
+
+  // Si annonceMode = "text" :
+  annonceTemplate String? // "mariage" | "naissance" | "anniversaire" | ...
+  // Champs génériques remplis selon le template. Le mapping est porté
+  // par le composant AnnonceCard côté front.
+  annonceTitle    String? // ex: "Sarah & Tom"
+  annonceSubtitle String? // ex: "se marient"
+  annonceBody     String? // ex: "Le 15 juin 2026 à Étretat — RSVP avant le 1er mai"
+
+  // Acheteur
+  buyerName  String?
+  buyerEmail String?
+
+  // Paiement
+  amountCents           Int     @default(500)
+  status                String  @default("PENDING") // PENDING | PAID | FAILED | REFUNDED
+  stripeSessionId       String? @unique
+  stripePaymentIntentId String? @unique
+
+  // Analytics légères
+  scratchedAt DateTime? // 1ère fois où le destinataire a déclenché la révélation
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
