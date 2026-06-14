@@ -2,7 +2,8 @@
 // Postgres (Neon en prod, branch dev pour le local — voir DEPLOY.md).
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
