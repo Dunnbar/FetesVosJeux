@@ -3,16 +3,16 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { generateUniqueCode, generateFileSlug } from "@/lib/codes";
-import { sendScratchLinkEmail } from "@/lib/email";
 import { uploadCoverImage } from "@/lib/storage";
 
 /**
  * Server action : crée une carte à gratter à partir des données du formulaire.
  *
- * NOTE v1 — Pas de paiement Stripe pour cette itération : on insère
- * directement la Scratch en `status = "PAID"`. Le webhook Stripe sera
- * ajouté juste après pour que ce passage se fasse uniquement sur paiement
- * confirmé (alors `status = "PENDING"` à la création).
+ * Status initial = "PENDING". La carte n'est PAS encore accessible
+ * publiquement via /g/[code] (qui filtre sur PAID). L'utilisateur est
+ * redirigé vers une page d'aperçu où il peut tester son rendu, puis
+ * cliquer pour payer via Stripe. C'est le webhook Stripe qui passera
+ * la carte à PAID + enverra l'email avec le lien.
  */
 export async function createScratchAction(formData: FormData) {
   // 1. Validation des champs texte
@@ -60,7 +60,7 @@ export async function createScratchAction(formData: FormData) {
     return found !== null;
   });
 
-  // 4. Insertion en base
+  // 4. Insertion en base, status PENDING (paiement Stripe à venir)
   await db.scratch.create({
     data: {
       code,
@@ -72,39 +72,14 @@ export async function createScratchAction(formData: FormData) {
       annonceSubtitle: subtitle ?? null,
       annonceBody: body ?? null,
       buyerEmail: buyerEmail ?? null,
-      // v1 : paiement bypassé — Stripe Checkout viendra dans un prochain coup.
-      status: "PAID",
+      status: "PENDING",
     },
   });
 
-  // 5. Envoi de l'email avec le lien (si email fourni).
-  // Volontairement non bloquant : si Resend échoue (clé invalide, réseau,
-  // domaine non vérifié…), la carte est quand même créée et l'utilisateur
-  // récupère son lien sur la page de remerciement.
-  let emailSent = false;
-  if (buyerEmail) {
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-    const result = await sendScratchLinkEmail({
-      to: buyerEmail,
-      code,
-      shareUrl: `${siteUrl}/g/${code}`,
-      annonceTitle: title,
-    });
-    if (result.sent) {
-      emailSent = true;
-    } else {
-      console.warn(
-        `[email] envoi échoué pour ${buyerEmail} (${result.reason})${
-          "error" in result && result.error ? `: ${result.error}` : ""
-        }`
-      );
-    }
-  }
-
-  // 6. Redirige vers la page de remerciement, en signalant l'état de l'email
-  // via un query param pour qu'on puisse afficher un message rassurant.
-  redirect(`/creer/merci/${code}${emailSent ? "?email=sent" : ""}`);
+  // 5. Redirige vers la page d'aperçu — l'utilisateur teste son rendu,
+  // puis déclenche le paiement Stripe depuis là. L'email avec le lien sera
+  // envoyé par le webhook Stripe une fois le paiement confirmé.
+  redirect(`/creer/${code}/preview`);
 }
 
 /** Extrait une chaîne non vide d'un FormData, ou null. */

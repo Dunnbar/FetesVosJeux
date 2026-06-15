@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CopyLinkButton } from "./CopyLinkButton";
+import { PaymentPending } from "./PaymentPending";
 
 export const dynamic = "force-dynamic";
 
@@ -13,25 +14,35 @@ export const metadata = {
 
 interface PageProps {
   params: Promise<{ code: string }>;
-  searchParams: Promise<{ email?: string }>;
 }
 
-export default async function MerciPage({ params, searchParams }: PageProps) {
+export default async function MerciPage({ params }: PageProps) {
   const { code } = await params;
-  const { email: emailParam } = await searchParams;
-  const emailSent = emailParam === "sent";
 
   const scratch = await db.scratch.findUnique({
     where: { code },
-    select: { code: true, annonceTitle: true, buyerEmail: true },
+    select: { code: true, annonceTitle: true, buyerEmail: true, status: true },
   });
 
   if (!scratch) {
     notFound();
   }
 
-  // On construit l'URL absolue côté server via une env. Fallback localhost
-  // si non définie (cas dev).
+  // L'utilisateur arrive ici juste après avoir payé Stripe (redirect
+  // depuis success_url). Le webhook Stripe pose la carte en PAID quasi
+  // instantanément, mais c'est asynchrone — il y a une milliseconde où
+  // la page peut voir status PENDING. Dans ce cas on rend un composant
+  // client qui va poller jusqu'à ce que la carte soit PAID.
+  if (scratch.status !== "PAID") {
+    return (
+      <>
+        <SiteHeader />
+        <PaymentPending code={scratch.code} />
+        <SiteFooter />
+      </>
+    );
+  }
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const shareUrl = `${siteUrl}/g/${scratch.code}`;
 
@@ -48,9 +59,9 @@ export default async function MerciPage({ params, searchParams }: PageProps) {
           <span className="text-[var(--color-rose-deep)]">à partager</span>.
         </h1>
 
-        {/* Bannière "email envoyé" — visible uniquement si le mail a été
-            effectivement envoyé via Resend (cf. server action). */}
-        {emailSent && scratch.buyerEmail && (
+        {/* Bannière email — visible si on a une adresse en DB (l'envoi est
+            géré par le webhook Stripe). */}
+        {scratch.buyerEmail && (
           <div className="mb-8 p-5 rounded-2xl border-2 border-[var(--color-mint)] bg-[var(--color-cream-2)] flex items-start gap-4">
             <div className="text-2xl shrink-0">✉️</div>
             <div className="min-w-0">
@@ -66,7 +77,6 @@ export default async function MerciPage({ params, searchParams }: PageProps) {
           </div>
         )}
 
-        {/* La carte URL */}
         <div className="card-pack mb-8">
           <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-ink-dim)] mb-3">
             ▸ Lien public
@@ -85,7 +95,6 @@ export default async function MerciPage({ params, searchParams }: PageProps) {
           </div>
         </div>
 
-        {/* Conseil pratique */}
         <div className="bg-[var(--color-cream-2)] rounded-2xl p-6 border-2 border-[var(--color-edge)]">
           <p className="text-sm leading-relaxed text-[var(--color-ink-dim)]">
             Code de la carte :{" "}
