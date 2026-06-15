@@ -11,6 +11,7 @@ import {
   BASE_AMOUNT_CENTS,
   ADDONS,
   computeAmountCents,
+  bundleDiscountCents,
 } from "@/lib/pricing";
 import { formatPrice } from "@/lib/format";
 import { createScratchAction } from "./actions";
@@ -31,6 +32,7 @@ export function CreateScratchForm() {
 
   const config = ANNONCE_TEMPLATES[template];
   const totalCents = computeAmountCents({ withFireworks, withSound });
+  const discountCents = bundleDiscountCents({ withFireworks, withSound });
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     setErrorMsg(null);
@@ -295,6 +297,11 @@ export function CreateScratchForm() {
             {withSound && (
               <div>
                 + {ADDONS.sound.label} : {formatPrice(ADDONS.sound.cents)}
+              </div>
+            )}
+            {discountCents > 0 && (
+              <div className="text-[var(--color-gold)]">
+                Offre 2 options : − {formatPrice(discountCents)}
               </div>
             )}
           </div>
