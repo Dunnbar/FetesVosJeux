@@ -57,6 +57,8 @@ export default async function PublicScratchPage({ params }: PageProps) {
       annonceSubtitle={scratch.annonceSubtitle}
       annonceBody={scratch.annonceBody}
       annonceImagePath={scratch.annonceImagePath}
+      withFireworks={scratch.withFireworks}
+      withSound={scratch.withSound}
     />
   );
 }

@@ -53,6 +53,11 @@ model Scratch {
   annonceSubtitle String? // ex: "se marient"
   annonceBody     String? // ex: "Le 15 juin 2026 à Étretat — RSVP avant le 1er mai"
 
+  // Options payantes ajoutées au prix de base.
+  // Affichés/joués sur /g/[code] uniquement si activés.
+  withFireworks Boolean @default(false) // feux d'artifice CSS au reveal
+  withSound     Boolean @default(false) // mini-fanfare Web Audio API au reveal
+
   // Acheteur
   buyerName  String?
   buyerEmail String?

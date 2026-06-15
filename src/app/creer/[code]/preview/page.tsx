@@ -37,6 +37,8 @@ export default async function PreviewPage({ params, searchParams }: PageProps) {
       annonceSubtitle={scratch.annonceSubtitle}
       annonceBody={scratch.annonceBody}
       annonceImagePath={scratch.annonceImagePath}
+      withFireworks={scratch.withFireworks}
+      withSound={scratch.withSound}
       amountCents={scratch.amountCents}
       canceled={canceled === "1"}
     />

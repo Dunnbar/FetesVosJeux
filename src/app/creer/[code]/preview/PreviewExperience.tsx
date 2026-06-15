@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { RevealCard } from "@/components/reveals/RevealCard";
 import { Fireworks } from "@/components/Fireworks";
 import { payScratchAction } from "./actions";
 import { formatPrice } from "@/lib/format";
+import { playRevealSound } from "@/lib/sound";
 
 interface PreviewExperienceProps {
   code: string;
@@ -16,6 +17,8 @@ interface PreviewExperienceProps {
   annonceSubtitle: string | null;
   annonceBody: string | null;
   annonceImagePath: string | null;
+  withFireworks: boolean;
+  withSound: boolean;
   amountCents: number;
   canceled: boolean;
 }
@@ -30,12 +33,23 @@ export function PreviewExperience({
   annonceSubtitle,
   annonceBody,
   annonceImagePath,
+  withFireworks,
+  withSound,
   amountCents,
   canceled,
 }: PreviewExperienceProps) {
   const [revealed, setRevealed] = useState(false);
+  const soundPlayedRef = useRef(false);
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleReveal = () => {
+    setRevealed(true);
+    if (withSound && !soundPlayedRef.current) {
+      soundPlayedRef.current = true;
+      playRevealSound();
+    }
+  };
 
   const [canvasSize, setCanvasSize] = useState(450);
   useEffect(() => {
@@ -103,7 +117,7 @@ export function PreviewExperience({
             annonceSubtitle={annonceSubtitle}
             annonceBody={annonceBody}
             annonceImageSrc={annonceImgSrc}
-            onReveal={() => setRevealed(true)}
+            onReveal={handleReveal}
             size={canvasSize}
           />
         </div>
@@ -151,8 +165,9 @@ export function PreviewExperience({
         </div>
       </main>
 
-      {/* Feux d'artifice quand le user gratte/révèle l'aperçu, pour le wow */}
-      <Fireworks active={revealed} />
+      {/* Feux d'artifice — seulement si l'utilisateur a coché l'option payante.
+          Permet à l'utilisateur de "tester" exactement ce qu'aura le destinataire. */}
+      <Fireworks active={revealed && withFireworks} />
     </>
   );
 }

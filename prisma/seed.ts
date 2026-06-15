@@ -22,7 +22,11 @@ const baseAnnonce = {
     "Le 14 septembre 2026 à Étretat — Save the date, plus d'infos très bientôt",
   buyerName: "Demo",
   buyerEmail: "demo@example.com",
-  amountCents: 500,
+  // Démos = produit complet : on active toutes les options pour montrer
+  // l'expérience maxi (feux + son). 5 € base + 2 × 1 € addon = 700 cents.
+  withFireworks: true,
+  withSound: true,
+  amountCents: 700,
   status: "PAID" as const,
 };
 

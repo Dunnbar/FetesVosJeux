@@ -7,6 +7,12 @@ import {
   REVEAL_MECHANIC_KEYS,
   type RevealMechanic,
 } from "@/components/reveals/types";
+import {
+  BASE_AMOUNT_CENTS,
+  ADDONS,
+  computeAmountCents,
+} from "@/lib/pricing";
+import { formatPrice } from "@/lib/format";
 import { createScratchAction } from "./actions";
 
 const TEMPLATE_KEYS = Object.keys(ANNONCE_TEMPLATES) as AnnonceTemplate[];
@@ -16,12 +22,15 @@ const MAX_SIZE_MB = 10;
 export function CreateScratchForm() {
   const [revealMechanic, setRevealMechanic] = useState<RevealMechanic>("scratch");
   const [template, setTemplate] = useState<AnnonceTemplate>("mariage");
+  const [withFireworks, setWithFireworks] = useState(false);
+  const [withSound, setWithSound] = useState(false);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [coverFileName, setCoverFileName] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const config = ANNONCE_TEMPLATES[template];
+  const totalCents = computeAmountCents({ withFireworks, withSound });
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     setErrorMsg(null);
@@ -212,9 +221,39 @@ export function CreateScratchForm() {
         </div>
       </section>
 
-      {/* ============ 5. Email du destinataire (toi) ============ */}
+      {/* ============ 5. Options payantes ============ */}
       <section>
-        <h2 className="text-xl font-bold mb-2">5. Ton email</h2>
+        <h2 className="text-xl font-bold mb-2">5. Les petits plus</h2>
+        <p className="text-sm text-[var(--color-ink-dim)] mb-4">
+          Ajoute des effets pour rendre la révélation encore plus festive.
+          Optionnel.
+        </p>
+
+        <div className="space-y-3">
+          <AddonToggle
+            name="withFireworks"
+            checked={withFireworks}
+            onChange={setWithFireworks}
+            emoji={ADDONS.fireworks.emoji}
+            label={ADDONS.fireworks.label}
+            description={ADDONS.fireworks.description}
+            priceCents={ADDONS.fireworks.cents}
+          />
+          <AddonToggle
+            name="withSound"
+            checked={withSound}
+            onChange={setWithSound}
+            emoji={ADDONS.sound.emoji}
+            label={ADDONS.sound.label}
+            description={ADDONS.sound.description}
+            priceCents={ADDONS.sound.cents}
+          />
+        </div>
+      </section>
+
+      {/* ============ 6. Email du destinataire (toi) ============ */}
+      <section>
+        <h2 className="text-xl font-bold mb-2">6. Ton email</h2>
         <p className="text-sm text-[var(--color-ink-dim)] mb-4">
           Pour recevoir le lien par mail. Facultatif.
         </p>
@@ -234,16 +273,117 @@ export function CreateScratchForm() {
         </div>
       )}
 
-      <div className="flex items-center gap-4 flex-wrap pt-4">
+      {/* Récapitulatif prix + bouton submit, dans une card mise en avant */}
+      <div className="bg-[var(--color-cream-2)] border-2 border-[var(--color-edge)] rounded-2xl p-6">
+        <div className="flex items-baseline justify-between mb-4 gap-4 flex-wrap">
+          <div className="flex flex-col gap-1">
+            <span className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-ink-dim)]">
+              ▸ Total à payer
+            </span>
+            <span className="text-3xl font-bold">
+              {formatPrice(totalCents)}
+            </span>
+          </div>
+          <div className="text-xs text-[var(--color-ink-dim)] text-right">
+            <div>Base : {formatPrice(BASE_AMOUNT_CENTS)}</div>
+            {withFireworks && (
+              <div>
+                + {ADDONS.fireworks.label} :{" "}
+                {formatPrice(ADDONS.fireworks.cents)}
+              </div>
+            )}
+            {withSound && (
+              <div>
+                + {ADDONS.sound.label} : {formatPrice(ADDONS.sound.cents)}
+              </div>
+            )}
+          </div>
+        </div>
+
         <button
           type="submit"
           disabled={isPending}
-          className="btn-primary disabled:opacity-60 disabled:cursor-wait"
+          className="btn-primary w-full justify-center disabled:opacity-60 disabled:cursor-wait"
         >
           {isPending ? "Création..." : "Créer ma carte ▸"}
         </button>
+        <p className="mt-3 text-xs text-[var(--color-ink-dim)] text-center">
+          Tu pourras tester ta carte avant de payer.
+        </p>
       </div>
     </form>
+  );
+}
+
+/** Toggle visuel pour une option payante (feux d'artifice, son…). */
+function AddonToggle({
+  name,
+  checked,
+  onChange,
+  emoji,
+  label,
+  description,
+  priceCents,
+}: {
+  name: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  emoji: string;
+  label: string;
+  description: string;
+  priceCents: number;
+}) {
+  return (
+    <label
+      className={`flex gap-4 items-start p-4 rounded-xl border-2 cursor-pointer transition-all ${
+        checked
+          ? "border-[var(--color-rose-deep)] bg-[var(--color-cream-2)] shadow-[3px_3px_0_0_var(--color-gold)]"
+          : "border-[var(--color-edge)] bg-[var(--color-cream-2)] hover:border-[var(--color-rose-deep)]/40"
+      }`}
+    >
+      {/* Checkbox cachée mais accessible — c'est elle qui finit dans FormData
+          sous la clé `name`. */}
+      <input
+        type="checkbox"
+        name={name}
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="sr-only"
+      />
+      <div className="text-3xl shrink-0">{emoji}</div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="font-bold">{label}</span>
+          <span className="font-mono text-sm text-[var(--color-rose-deep)] whitespace-nowrap">
+            +{formatPrice(priceCents)}
+          </span>
+        </div>
+        <p className="text-sm text-[var(--color-ink-dim)] mt-1 leading-relaxed">
+          {description}
+        </p>
+      </div>
+      {/* Indicateur visuel d'état (faux toggle) */}
+      <div
+        className={`mt-1 shrink-0 w-6 h-6 rounded-full border-2 transition-colors ${
+          checked
+            ? "bg-[var(--color-rose-deep)] border-[var(--color-rose-deep)]"
+            : "border-[var(--color-ink-dim)]/40"
+        }`}
+        aria-hidden
+      >
+        {checked && (
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth="3"
+            className="w-full h-full p-1"
+          >
+            <polyline points="5 12 10 17 19 8" />
+          </svg>
+        )}
+      </div>
+    </label>
   );
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { RevealCard } from "@/components/reveals/RevealCard";
 import {
@@ -8,6 +8,7 @@ import {
   type RevealMechanic,
 } from "@/components/reveals/types";
 import { Fireworks } from "@/components/Fireworks";
+import { playRevealSound } from "@/lib/sound";
 
 interface ScratchExperienceProps {
   code: string;
@@ -19,6 +20,8 @@ interface ScratchExperienceProps {
   annonceSubtitle: string | null;
   annonceBody: string | null;
   annonceImagePath: string | null;
+  withFireworks: boolean;
+  withSound: boolean;
 }
 
 /**
@@ -40,8 +43,20 @@ export function ScratchExperience({
   annonceSubtitle,
   annonceBody,
   annonceImagePath,
+  withFireworks,
+  withSound,
 }: ScratchExperienceProps) {
   const [revealed, setRevealed] = useState(false);
+  // Le son ne doit jouer qu'une fois — garde-fou en cas de re-render.
+  const soundPlayedRef = useRef(false);
+
+  const handleReveal = () => {
+    setRevealed(true);
+    if (withSound && !soundPlayedRef.current) {
+      soundPlayedRef.current = true;
+      playRevealSound();
+    }
+  };
 
   // Taille du canvas : on attend le premier client-render pour mesurer.
   const [canvasSize, setCanvasSize] = useState(450);
@@ -59,7 +74,7 @@ export function ScratchExperience({
   const verb = HEADLINE_VERB[mechanic];
   const hint = REVEAL_MECHANICS[mechanic].hint;
 
-  const showFireworks = revealed;
+  const showFireworks = revealed && withFireworks;
 
   return (
     <>
@@ -84,7 +99,7 @@ export function ScratchExperience({
             annonceSubtitle={annonceSubtitle}
             annonceBody={annonceBody}
             annonceImageSrc={annonceImgSrc}
-            onReveal={() => setRevealed(true)}
+            onReveal={handleReveal}
             size={canvasSize}
           />
         </div>

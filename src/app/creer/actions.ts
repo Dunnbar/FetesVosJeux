@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { generateUniqueCode, generateFileSlug } from "@/lib/codes";
 import { uploadCoverImage } from "@/lib/storage";
+import { computeAmountCents } from "@/lib/pricing";
 
 /**
  * Server action : crée une carte à gratter à partir des données du formulaire.
@@ -27,6 +28,11 @@ export async function createScratchAction(formData: FormData) {
   const subtitle = stringField(formData, "subtitle");
   const body = stringField(formData, "body");
   const buyerEmail = stringField(formData, "buyerEmail");
+
+  // Options payantes — checkbox values arrivent en tant que "on" / absent.
+  const withFireworks = formData.get("withFireworks") === "on";
+  const withSound = formData.get("withSound") === "on";
+  const amountCents = computeAmountCents({ withFireworks, withSound });
 
   if (!title) {
     throw new Error("Le titre de l'annonce est requis.");
@@ -72,6 +78,9 @@ export async function createScratchAction(formData: FormData) {
       annonceSubtitle: subtitle ?? null,
       annonceBody: body ?? null,
       buyerEmail: buyerEmail ?? null,
+      withFireworks,
+      withSound,
+      amountCents,
       status: "PENDING",
     },
   });
