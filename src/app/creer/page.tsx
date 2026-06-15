@@ -11,7 +11,7 @@ export default function CreerPage() {
     <>
       <SiteHeader />
 
-      <main className="flex-1 mx-auto max-w-3xl w-full px-6 py-12 sm:py-16">
+      <main className="flex-1 mx-auto max-w-3xl lg:max-w-6xl w-full px-6 py-12 sm:py-16">
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[0.95] mb-12">
           Ta photo,
           <br />

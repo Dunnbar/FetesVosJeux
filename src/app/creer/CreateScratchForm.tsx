@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ANNONCE_TEMPLATES, type AnnonceTemplate } from "@/components/AnnonceCard";
+import {
+  ANNONCE_TEMPLATES,
+  AnnonceCard,
+  type AnnonceTemplate,
+} from "@/components/AnnonceCard";
 import {
   REVEAL_MECHANICS,
   REVEAL_MECHANIC_KEYS,
@@ -20,9 +24,18 @@ const TEMPLATE_KEYS = Object.keys(ANNONCE_TEMPLATES) as AnnonceTemplate[];
 
 const MAX_SIZE_MB = 10;
 
+/** Limites de caractères par champ — évite que l'annonce déborde de la carte. */
+const FIELD_LIMITS = { title: 50, subtitle: 60, body: 140 } as const;
+
 export function CreateScratchForm() {
   const [revealMechanic, setRevealMechanic] = useState<RevealMechanic>("scratch");
   const [template, setTemplate] = useState<AnnonceTemplate>("mariage");
+  // Contenu contrôlé pour alimenter l'aperçu en direct.
+  const [title, setTitle] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [body, setBody] = useState("");
+  // Aperçu en popup sur mobile (sur desktop il est toujours visible à côté).
+  const [showPreview, setShowPreview] = useState(false);
   const [withFireworks, setWithFireworks] = useState(false);
   const [withSound, setWithSound] = useState(false);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
@@ -85,6 +98,8 @@ export function CreateScratchForm() {
   }
 
   return (
+    <>
+    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-12 lg:items-start">
     <form onSubmit={handleSubmit} className="space-y-10">
       {/* ============ 1. Type de carte (mécanique de révélation) ============ */}
       <section>
@@ -207,17 +222,27 @@ export function CreateScratchForm() {
             label={config.fieldLabels.title}
             name="title"
             placeholder={config.placeholders.title}
+            value={title}
+            onChange={setTitle}
+            maxLength={FIELD_LIMITS.title}
             required
           />
           <Field
             label={config.fieldLabels.subtitle}
             name="subtitle"
             placeholder={config.placeholders.subtitle}
+            value={subtitle}
+            onChange={setSubtitle}
+            maxLength={FIELD_LIMITS.subtitle}
           />
           <Field
             label={config.fieldLabels.body}
             name="body"
             placeholder={config.placeholders.body}
+            value={body}
+            onChange={setBody}
+            maxLength={FIELD_LIMITS.body}
+            showCount
             multiline
           />
         </div>
@@ -319,6 +344,137 @@ export function CreateScratchForm() {
         </p>
       </div>
     </form>
+
+      {/* Aperçu en direct — colonne de droite sur desktop, sticky au scroll. */}
+      <aside className="hidden lg:block">
+        <div className="sticky top-24">
+          <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-ink-dim)] mb-3">
+            ▸ Aperçu en direct
+          </p>
+          <LivePreview
+            template={template}
+            title={title}
+            subtitle={subtitle}
+            body={body}
+            coverPreview={coverPreview}
+          />
+          <p className="text-xs text-[var(--color-ink-dim)] text-center mt-3 leading-relaxed">
+            L&apos;annonce une fois révélée. Le destinataire la découvre après
+            avoir gratté ta photo.
+          </p>
+        </div>
+      </aside>
+    </div>
+
+    {/* Mobile : bouton flottant + popup d'aperçu. */}
+    <button
+      type="button"
+      onClick={() => setShowPreview(true)}
+      className="lg:hidden fixed bottom-5 right-5 z-40 btn-primary rounded-full shadow-lg"
+    >
+      👁 Aperçu
+    </button>
+
+    {showPreview && (
+      <div
+        className="lg:hidden fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-ink)]/70 backdrop-blur-sm p-6"
+        onClick={() => setShowPreview(false)}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="relative w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+          <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-cream)] mb-3 text-center">
+            ▸ Aperçu en direct
+          </p>
+          <LivePreview
+            template={template}
+            title={title}
+            subtitle={subtitle}
+            body={body}
+            coverPreview={coverPreview}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPreview(false)}
+            className="mt-5 btn-primary w-full justify-center"
+          >
+            Continuer l&apos;édition
+          </button>
+        </div>
+      </div>
+    )}
+    </>
+  );
+}
+
+/**
+ * Aperçu en direct, alimenté par les champs du form. Toggle recto/verso :
+ *   - « Photo »   : la couverture grattable (ce que le destinataire voit d'abord)
+ *   - « Annonce » : l'annonce révélée en dessous
+ */
+function LivePreview({
+  template,
+  title,
+  subtitle,
+  body,
+  coverPreview,
+}: {
+  template: AnnonceTemplate;
+  title: string;
+  subtitle: string;
+  body: string;
+  coverPreview: string | null;
+}) {
+  const [face, setFace] = useState<"photo" | "annonce">("annonce");
+  return (
+    <div>
+      {/* Toggle recto / verso */}
+      <div className="flex w-fit mx-auto mb-3 p-1 gap-1 rounded-full bg-[var(--color-cream-2)] border-2 border-[var(--color-edge)]">
+        {(
+          [
+            ["photo", "Photo"],
+            ["annonce", "Annonce"],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setFace(key)}
+            className={`px-4 py-1.5 rounded-full font-mono text-xs uppercase tracking-widest transition-colors ${
+              face === key
+                ? "bg-[var(--color-rose-deep)] text-[var(--color-cream)]"
+                : "text-[var(--color-ink-dim)] hover:text-[var(--color-ink)]"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="relative w-full max-w-[340px] aspect-square mx-auto rounded-2xl overflow-hidden border-2 border-[var(--color-ink)] shadow-[6px_6px_0_0_var(--color-gold)]">
+        {face === "annonce" ? (
+          <AnnonceCard
+            mode="text"
+            template={template}
+            title={title || null}
+            subtitle={subtitle || null}
+            body={body || null}
+          />
+        ) : coverPreview ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={coverPreview}
+            alt="Aperçu de la photo"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--color-cream-2)] text-[var(--color-ink-dim)]">
+            <span className="text-4xl">🖼️</span>
+            <span className="text-sm font-bold">Ta photo ici</span>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -394,7 +550,7 @@ function AddonToggle({
   );
 }
 
-/** Champ texte stylisé, optionnellement multiligne. */
+/** Champ texte stylisé, optionnellement multiligne et/ou contrôlé. */
 function Field({
   label,
   name,
@@ -402,6 +558,10 @@ function Field({
   required,
   type = "text",
   multiline,
+  value,
+  onChange,
+  maxLength,
+  showCount,
 }: {
   label: string;
   name: string;
@@ -409,29 +569,54 @@ function Field({
   required?: boolean;
   type?: string;
   multiline?: boolean;
+  value?: string;
+  onChange?: (v: string) => void;
+  maxLength?: number;
+  showCount?: boolean;
 }) {
   const id = `field-${name}`;
   const sharedClasses =
     "block w-full px-4 py-3 bg-[var(--color-cream-2)] border-2 border-[var(--color-edge)] rounded-xl text-[var(--color-ink)] placeholder:text-[var(--color-ink-dim)] focus:outline-none focus:border-[var(--color-rose-deep)] transition-colors";
+  // Un champ est contrôlé dès qu'on lui passe value + onChange.
+  const controlled =
+    value !== undefined && onChange !== undefined
+      ? {
+          value,
+          onChange: (
+            e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+          ) =>
+            onChange(
+              maxLength !== undefined
+                ? e.target.value.slice(0, maxLength)
+                : e.target.value
+            ),
+        }
+      : {};
   return (
     <div>
-      <label
-        htmlFor={id}
-        className="block text-sm font-bold mb-2"
-      >
-        {label}
-        {required && (
-          <span className="text-[var(--color-rose-deep)] ml-1">*</span>
+      <div className="flex items-baseline justify-between mb-2">
+        <label htmlFor={id} className="block text-sm font-bold">
+          {label}
+          {required && (
+            <span className="text-[var(--color-rose-deep)] ml-1">*</span>
+          )}
+        </label>
+        {showCount && maxLength !== undefined && (
+          <span className="font-mono text-xs text-[var(--color-ink-dim)]">
+            {(value ?? "").length}/{maxLength}
+          </span>
         )}
-      </label>
+      </div>
       {multiline ? (
         <textarea
           id={id}
           name={name}
           placeholder={placeholder}
           required={required}
+          maxLength={maxLength}
           rows={3}
           className={sharedClasses}
+          {...controlled}
         />
       ) : (
         <input
@@ -440,7 +625,9 @@ function Field({
           type={type}
           placeholder={placeholder}
           required={required}
+          maxLength={maxLength}
           className={sharedClasses}
+          {...controlled}
         />
       )}
     </div>

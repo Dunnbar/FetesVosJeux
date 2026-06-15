@@ -38,7 +38,7 @@ export const ANNONCE_TEMPLATES: Record<AnnonceTemplate, TemplateConfig> = {
     fieldLabels: {
       title: "Noms des mariés",
       subtitle: "Petite phrase",
-      body: "Date et lieu",
+      body: "Texte d'annonce",
     },
     placeholders: {
       title: "Sarah & Tom",
@@ -52,7 +52,7 @@ export const ANNONCE_TEMPLATES: Record<AnnonceTemplate, TemplateConfig> = {
     fieldLabels: {
       title: "Prénom du bébé",
       subtitle: "Annonce",
-      body: "Date et infos",
+      body: "Texte d'annonce",
     },
     placeholders: {
       title: "Léon",
@@ -66,7 +66,7 @@ export const ANNONCE_TEMPLATES: Record<AnnonceTemplate, TemplateConfig> = {
     fieldLabels: {
       title: "Nom de la personne",
       subtitle: "Ce qu'on fête",
-      body: "Date et lieu",
+      body: "Texte d'annonce",
     },
     placeholders: {
       title: "Camille",
@@ -75,17 +75,17 @@ export const ANNONCE_TEMPLATES: Record<AnnonceTemplate, TemplateConfig> = {
     },
   },
   "save-the-date": {
-    label: "Save the Date",
-    emoji: "📅",
+    label: "Autre annonce",
+    emoji: "📣",
     fieldLabels: {
-      title: "Événement",
-      subtitle: "Sur-titre",
-      body: "Date",
+      title: "Titre",
+      subtitle: "Annonce",
+      body: "Texte d'annonce",
     },
     placeholders: {
-      title: "Notre mariage",
-      subtitle: "Save the Date",
-      body: "Vendredi 5 décembre 2026",
+      title: "Notre crémaillère",
+      subtitle: "On vous invite",
+      body: "Samedi 5 décembre dès 19h — ramène ta bonne humeur",
     },
   },
 };
@@ -257,14 +257,14 @@ function SaveTheDateLayout({ title, subtitle, body }: TextProps) {
         className="font-mono text-[0.65rem] uppercase tracking-[0.5em]"
         style={{ color: "var(--color-ink-dim)" }}
       >
-        {subtitle || "Save the Date"}
+        {subtitle || "On vous invite"}
       </p>
       <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
-        {title || "Save the Date"}
+        {title || "Notre crémaillère"}
       </h2>
       <div className="mt-4 mx-auto w-12 h-px bg-[var(--color-rose-deep)] opacity-70" />
       <p className="mt-4 text-sm leading-relaxed max-w-[85%]">
-        {body || "Vendredi 5 décembre 2026"}
+        {body || "Samedi 5 décembre dès 19h"}
       </p>
     </TemplateFrame>
   );
