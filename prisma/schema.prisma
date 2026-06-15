@@ -68,9 +68,30 @@ model Scratch {
   stripeSessionId       String? @unique
   stripePaymentIntentId String? @unique
 
+  // Si la carte a été débloquée avec un code cadeau (offert) plutôt que
+  // payée via Stripe, on garde la trace du code utilisé pour le suivi.
+  giftCode String?
+
   // Analytics légères
   scratchedAt DateTime? // 1ère fois où le destinataire a déclenché la révélation
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/// Code cadeau à usage unique, généré par l'admin (cf. `npm run codes:gen`)
+/// et distribué à la main. Saisi sur la page d'aperçu, il débloque la carte
+/// gratuitement (status PAID) sans passer par Stripe, puis est consommé.
+model PromoCode {
+  code String @id // ex: "K7M3PQ8X42" — même alphabet que les cartes
+
+  used   Boolean   @default(false) // consommé une fois utilisé
+  usedAt DateTime?
+  // Code de la carte qui a consommé ce code cadeau (pour le suivi).
+  usedByScratchCode String?
+
+  // Note libre pour le suivi côté admin (ex: "cadeau Marie", "jeu concours").
+  note String?
+
+  createdAt DateTime @default(now())
 }
