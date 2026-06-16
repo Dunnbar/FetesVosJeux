@@ -18,6 +18,7 @@ import {
   bundleDiscountCents,
 } from "@/lib/pricing";
 import { formatPrice } from "@/lib/format";
+import { Fireworks } from "@/components/Fireworks";
 import { createScratchAction } from "./actions";
 
 const TEMPLATE_KEYS = Object.keys(ANNONCE_TEMPLATES) as AnnonceTemplate[];
@@ -99,7 +100,7 @@ export function CreateScratchForm() {
 
   return (
     <>
-    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-12 lg:items-start">
+    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-12">
     <form onSubmit={handleSubmit} className="space-y-10">
       {/* ============ 1. Type de carte (mécanique de révélation) ============ */}
       <section>
@@ -357,6 +358,7 @@ export function CreateScratchForm() {
             subtitle={subtitle}
             body={body}
             coverPreview={coverPreview}
+            withFireworks={withFireworks}
           />
           <p className="text-xs text-[var(--color-ink-dim)] text-center mt-3 leading-relaxed">
             L&apos;annonce une fois révélée. Le destinataire la découvre après
@@ -392,6 +394,7 @@ export function CreateScratchForm() {
             subtitle={subtitle}
             body={body}
             coverPreview={coverPreview}
+            withFireworks={withFireworks}
           />
           <button
             type="button"
@@ -418,12 +421,14 @@ function LivePreview({
   subtitle,
   body,
   coverPreview,
+  withFireworks,
 }: {
   template: AnnonceTemplate;
   title: string;
   subtitle: string;
   body: string;
   coverPreview: string | null;
+  withFireworks: boolean;
 }) {
   const [face, setFace] = useState<"photo" | "annonce">("annonce");
   return (
@@ -453,13 +458,17 @@ function LivePreview({
 
       <div className="relative w-full max-w-[340px] aspect-square mx-auto rounded-2xl overflow-hidden border-2 border-[var(--color-ink)] shadow-[6px_6px_0_0_var(--color-gold)]">
         {face === "annonce" ? (
-          <AnnonceCard
-            mode="text"
-            template={template}
-            title={title || null}
-            subtitle={subtitle || null}
-            body={body || null}
-          />
+          <>
+            <AnnonceCard
+              mode="text"
+              template={template}
+              title={title || null}
+              subtitle={subtitle || null}
+              body={body || null}
+            />
+            {/* Aperçu des feux d'artifice si l'option est cochée */}
+            <Fireworks active={withFireworks} contained />
+          </>
         ) : coverPreview ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
