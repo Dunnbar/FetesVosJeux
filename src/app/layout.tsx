@@ -16,10 +16,32 @@ const monoFont = JetBrains_Mono({
   display: "swap",
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.quisygratte.fr";
+
+const title = "Qui S'y Gratte — Le faire-part à gratter";
+const description =
+  "Une photo à gratter pour annoncer un mariage, une naissance, un anniversaire. Tu uploades, ils grattent, ils découvrent.";
+
 export const metadata: Metadata = {
-  title: "Qui S'y Gratte — Le faire-part à gratter",
-  description:
-    "Une photo à gratter pour annoncer un mariage, une naissance, un anniversaire. Tu uploades, ils grattent, ils découvrent.",
+  // Base absolue pour résoudre les images OG/Twitter (sinon → localhost).
+  metadataBase: new URL(siteUrl),
+  title,
+  description,
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    siteName: "Qui S'y Gratte",
+    url: "/",
+    title,
+    description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 export default function RootLayout({
