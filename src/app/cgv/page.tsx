@@ -44,18 +44,17 @@ export default function CGVPage() {
           <section>
             <h2>2. Éditeur / Vendeur</h2>
             <p>
-              Le Site est édité par <strong>[RAISON SOCIALE / NOM]</strong>,
-              [STATUT JURIDIQUE — ex&nbsp;: micro-entreprise], dont le siège est
-              situé <strong>[ADRESSE COMPLÈTE]</strong>, immatriculée sous le
-              numéro SIRET <strong>[SIRET]</strong>.
+              Le Site est édité par <strong>Dimitri Saint-Mleux</strong>,
+              entrepreneur individuel (micro-entreprise), dont le siège est
+              situé <strong>1 rue du 19 mars 1962, 14730 Giberville</strong>,
+              immatriculé sous le numéro SIRET{" "}
+              <strong>829&nbsp;947&nbsp;985&nbsp;00026</strong>.
             </p>
             <p>
-              Contact&nbsp;: <strong>[EMAIL DE CONTACT]</strong>.
+              Contact&nbsp;: <strong>dimitri.developpeur@gmail.com</strong>.
             </p>
             <p>
-              TVA&nbsp;: [le cas échéant — «&nbsp;TVA non applicable, art. 293 B
-              du CGI&nbsp;» pour une micro-entreprise, ou numéro de TVA
-              intracommunautaire].
+              TVA&nbsp;: TVA non applicable, art. 293 B du CGI.
             </p>
           </section>
 
@@ -179,8 +178,14 @@ export default function CGVPage() {
               uniquement pour fournir le service. Conformément au RGPD,
               l&apos;acheteur dispose d&apos;un droit d&apos;accès, de
               rectification et de suppression de ses données en écrivant à
-              <strong> [EMAIL DE CONTACT]</strong>. [Renvoyer le cas échéant vers
-              une Politique de confidentialité dédiée.]
+              <strong> dimitri.developpeur@gmail.com</strong>. Pour le détail, voir notre{" "}
+              <a
+                href="/confidentialite"
+                className="underline decoration-[var(--color-gold)] hover:text-[var(--color-rose-deep)]"
+              >
+                Politique de confidentialité
+              </a>
+              .
             </p>
           </section>
 

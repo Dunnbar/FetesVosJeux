@@ -9,12 +9,21 @@ export function SiteFooter() {
           <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-ink-dim)]">
             © {new Date().getFullYear()} — Qui S&apos;y Gratte
           </p>
-          <Link
-            href="/cgv"
-            className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-ink-dim)] hover:text-[var(--color-rose-deep)] underline underline-offset-4 decoration-[var(--color-gold)]"
-          >
-            CGV
-          </Link>
+          <nav className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            {[
+              { href: "/cgv", label: "CGV" },
+              { href: "/mentions-legales", label: "Mentions légales" },
+              { href: "/confidentialite", label: "Confidentialité" },
+            ].map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-ink-dim)] hover:text-[var(--color-rose-deep)] underline underline-offset-4 decoration-[var(--color-gold)]"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </nav>
         </div>
         <p className="text-sm text-[var(--color-ink-dim)] italic">
           Les annonces qui font dire waouh.
