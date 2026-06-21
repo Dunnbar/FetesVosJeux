@@ -39,6 +39,9 @@ export function CreateScratchForm() {
   const [showPreview, setShowPreview] = useState(false);
   const [withFireworks, setWithFireworks] = useState(false);
   const [withSound, setWithSound] = useState(false);
+  // Code cadeau optionnel : si saisi et valide, la carte est offerte (pas de Stripe).
+  const [showGiftCode, setShowGiftCode] = useState(false);
+  const [giftCode, setGiftCode] = useState("");
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [coverFileName, setCoverFileName] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -333,15 +336,57 @@ export function CreateScratchForm() {
           </div>
         </div>
 
+        {/* Code cadeau optionnel — débloque la carte gratuitement (pas de Stripe) */}
+        <div className="mb-4">
+          {!showGiftCode ? (
+            <button
+              type="button"
+              onClick={() => setShowGiftCode(true)}
+              className="w-full text-center font-mono text-xs uppercase tracking-[0.2em] text-[var(--color-ink-dim)] hover:text-[var(--color-rose-deep)] transition-colors"
+            >
+              🎁 J&apos;ai un code cadeau
+            </button>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="giftCode"
+                className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--color-rose-deep)]"
+              >
+                ▸ Code cadeau
+              </label>
+              <input
+                id="giftCode"
+                name="giftCode"
+                type="text"
+                value={giftCode}
+                onChange={(e) => setGiftCode(e.target.value.toUpperCase())}
+                placeholder="TON CODE"
+                autoCapitalize="characters"
+                autoComplete="off"
+                className="w-full px-4 py-3 bg-[var(--color-cream)] border-2 border-[var(--color-edge)] rounded-xl font-mono uppercase tracking-widest text-[var(--color-ink)] placeholder:text-[var(--color-ink-dim)] focus:outline-none focus:border-[var(--color-rose-deep)]"
+              />
+              <p className="text-xs text-[var(--color-ink-dim)]">
+                Avec un code valide, ta carte est offerte — pas de paiement.
+              </p>
+            </div>
+          )}
+        </div>
+
         <button
           type="submit"
           disabled={isPending}
           className="btn-primary w-full justify-center disabled:opacity-60 disabled:cursor-wait"
         >
-          {isPending ? "Création..." : "Créer ma carte ▸"}
+          {isPending
+            ? "Création..."
+            : giftCode.trim()
+              ? "Obtenir ma carte ▸"
+              : "Créer et payer ▸"}
         </button>
         <p className="mt-3 text-xs text-[var(--color-ink-dim)] text-center">
-          Tu pourras tester ta carte avant de payer.
+          {giftCode.trim()
+            ? "Carte offerte avec ton code — aucun paiement."
+            : "Paiement sécurisé par Stripe juste après."}
         </p>
       </div>
     </form>

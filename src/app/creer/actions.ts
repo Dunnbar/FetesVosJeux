@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { generateUniqueCode, generateFileSlug } from "@/lib/codes";
 import { uploadCoverImage } from "@/lib/storage";
 import { computeAmountCents } from "@/lib/pricing";
+import { createCheckoutForScratch, redeemGiftCode } from "@/lib/checkout";
 
 /**
  * Server action : crée une carte à gratter à partir des données du formulaire.
@@ -28,6 +29,7 @@ export async function createScratchAction(formData: FormData) {
   const subtitle = stringField(formData, "subtitle");
   const body = stringField(formData, "body");
   const buyerEmail = stringField(formData, "buyerEmail");
+  const giftCode = stringField(formData, "giftCode")?.toUpperCase() ?? null;
 
   // Options payantes — checkbox values arrivent en tant que "on" / absent.
   const withFireworks = formData.get("withFireworks") === "on";
@@ -36,6 +38,19 @@ export async function createScratchAction(formData: FormData) {
 
   if (!title) {
     throw new Error("Le titre de l'annonce est requis.");
+  }
+
+  // Si un code cadeau est saisi, on le valide AVANT de créer la carte / uploader
+  // l'image — évite de laisser une carte orpheline en cas de code erroné. La
+  // consommation atomique réelle se fait juste après la création (redeemGiftCode).
+  if (giftCode) {
+    const promo = await db.promoCode.findUnique({
+      where: { code: giftCode },
+      select: { used: true },
+    });
+    if (!promo || promo.used) {
+      throw new Error("Code cadeau invalide ou déjà utilisé.");
+    }
   }
 
   // 2. Upload du fichier de couverture
@@ -85,10 +100,17 @@ export async function createScratchAction(formData: FormData) {
     },
   });
 
-  // 5. Redirige vers la page d'aperçu — l'utilisateur teste son rendu,
-  // puis déclenche le paiement Stripe depuis là. L'email avec le lien sera
-  // envoyé par le webhook Stripe une fois le paiement confirmé.
-  redirect(`/creer/${code}/preview`);
+  // 5. Finalisation directe (plus de page d'aperçu intermédiaire — l'aperçu
+  // est déjà dans le formulaire) :
+  //   - code cadeau saisi  → on débloque gratuitement et on file vers "merci"
+  //   - sinon              → paiement Stripe
+  // La page /creer/[code]/preview ne sert plus que de reprise si le paiement
+  // Stripe est annulé (cancel_url).
+  if (giftCode) {
+    await redeemGiftCode(code, giftCode);
+    redirect(`/creer/merci/${code}`);
+  }
+  redirect(await createCheckoutForScratch(code));
 }
 
 /** Extrait une chaîne non vide d'un FormData, ou null. */
