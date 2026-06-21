@@ -34,7 +34,7 @@ interface ScratchCanvasProps {
 
 export function ScratchCanvas({
   coverImageSrc,
-  revealThreshold = 50,
+  revealThreshold = 30,
   onReveal,
   size = 450,
   children,
@@ -99,7 +99,11 @@ export function ScratchCanvas({
     img.src = coverImageSrc;
   }, [size, coverImageSrc]);
 
-  // Calcule le pourcentage de pixels totalement transparents (effacés).
+  // Calcule le pourcentage de pixels suffisamment effacés.
+  // La brosse a un alpha graduel (bords doux) : en grattant, beaucoup de
+  // pixels deviennent partiellement transparents sans jamais atteindre
+  // exactement alpha 0. On compte donc comme "effacé" tout pixel dont l'alpha
+  // est passé sous la moitié — ça colle à ce que l'œil perçoit comme gratté.
   const computeErasedPercent = useCallback((): number => {
     const canvas = canvasRef.current;
     if (!canvas) return 0;
@@ -113,7 +117,7 @@ export function ScratchCanvas({
     let sampled = 0;
     for (let i = 3; i < data.length; i += stride) {
       sampled++;
-      if (data[i] === 0) erased++;
+      if (data[i] < 128) erased++;
     }
     return Math.round((erased / sampled) * 100);
   }, []);
