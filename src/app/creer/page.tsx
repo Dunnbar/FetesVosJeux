@@ -4,6 +4,8 @@ import { CreateScratchForm } from "./CreateScratchForm";
 
 export const metadata = {
   title: "Créer ma carte à gratter — Qui S'y Gratte",
+  description:
+    "Crée ta carte à gratter personnalisée : ta photo, ton message, un lien unique à partager. Tes proches grattent l'écran et découvrent la surprise.",
 };
 
 export default function CreerPage() {

@@ -21,7 +21,7 @@ const siteUrl =
 
 const title = "Qui S'y Gratte — Le faire-part à gratter";
 const description =
-  "Une photo à gratter pour annoncer un mariage, une naissance, un anniversaire. Tu uploades, ils grattent, ils découvrent.";
+  "Ta photo devient une carte à gratter : tes proches grattent l'écran et découvrent ton annonce. Mariage, naissance, anniversaire — l'effet waouh.";
 
 export const metadata: Metadata = {
   // Base absolue pour résoudre les images OG/Twitter (sinon → localhost).
