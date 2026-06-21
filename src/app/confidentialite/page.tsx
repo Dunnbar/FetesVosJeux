@@ -37,7 +37,7 @@ export default function ConfidentialitePage() {
             <h2>2. Données collectées</h2>
             <ul>
               <li>
-                <strong>Adresse e-mail</strong> de l&apos;acheteur (si fournie),
+                <strong>Adresse e-mail</strong>{" "}de l&apos;acheteur (si fournie),
                 pour envoyer le lien de la carte.
               </li>
               <li>

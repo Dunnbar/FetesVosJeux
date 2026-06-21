@@ -111,7 +111,7 @@ export default function CGVPage() {
             <p>
               Conformément à l&apos;article L.221-28 13° du Code de la
               consommation, le droit de rétractation ne peut être exercé pour la
-              fourniture d&apos;un <strong>contenu numérique</strong> non fourni
+              fourniture d&apos;un <strong>contenu numérique</strong>{" "}non fourni
               sur un support matériel dont l&apos;exécution a commencé après accord
               préalable exprès du consommateur et renoncement exprès à son droit de
               rétractation.
@@ -177,8 +177,8 @@ export default function CGVPage() {
               Les données collectées (e-mail, contenu de la carte) sont utilisées
               uniquement pour fournir le service. Conformément au RGPD,
               l&apos;acheteur dispose d&apos;un droit d&apos;accès, de
-              rectification et de suppression de ses données en écrivant à
-              <strong> dimitri.developpeur@gmail.com</strong>. Pour le détail, voir notre{" "}
+              rectification et de suppression de ses données en écrivant à{" "}
+              <strong>dimitri.developpeur@gmail.com</strong>. Pour le détail, voir notre{" "}
               <a
                 href="/confidentialite"
                 className="underline decoration-[var(--color-gold)] hover:text-[var(--color-rose-deep)]"
