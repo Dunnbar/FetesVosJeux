@@ -192,11 +192,9 @@ export default function CGVPage() {
           <section>
             <h2>13. Service client et réclamations</h2>
             <p>
-              Pour toute question ou réclamation&nbsp;: <strong>[EMAIL DE
-              CONTACT]</strong>. Conformément à l&apos;article L.612-1 du Code de
-              la consommation, le consommateur peut recourir gratuitement à un
-              médiateur de la consommation&nbsp;: [coordonnées du médiateur — à
-              compléter].
+              Pour toute question ou réclamation, écris-nous à{" "}
+              <strong>dimitri.developpeur@gmail.com</strong>. Nous nous efforçons
+              de répondre dans les meilleurs délais.
             </p>
           </section>
 
