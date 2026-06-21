@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { db } from "@/lib/db";
+import { REVEAL_MECHANICS, type RevealMechanic } from "@/components/reveals/types";
 
 // OG image dynamique pour /g/[code] — vue quand qqun partage le lien
 // d'une carte sur WhatsApp / iMessage / Slack / etc.
@@ -24,13 +25,18 @@ export default async function OgImage({ params }: Props) {
   const { code } = await params;
   const scratch = await db.scratch.findUnique({
     where: { code },
-    select: { annonceTitle: true, status: true },
+    select: { annonceTitle: true, status: true, revealMechanic: true },
   });
 
   // Si la carte n'existe pas ou n'est pas payée, on affiche un teaser
   // générique sans titre — évite de leak l'info.
   const showName = scratch?.status === "PAID" && scratch.annonceTitle;
   const title = showName ? scratch.annonceTitle : "Une surprise t'attend";
+
+  // Verbe adapté à la mécanique (Gratte / Développe / Ouvre).
+  const mechanic = (scratch?.revealMechanic ?? "scratch") as RevealMechanic;
+  const verb = (REVEAL_MECHANICS[mechanic] ?? REVEAL_MECHANICS.scratch)
+    .previewVerb;
 
   return new ImageResponse(
     (
@@ -106,7 +112,7 @@ export default async function OgImage({ params }: Props) {
               marginTop: 32,
             }}
           >
-            Clique pour gratter et découvrir ✦
+            {verb} pour découvrir ✦
           </div>
         </div>
 

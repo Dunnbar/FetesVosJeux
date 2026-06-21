@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { REVEAL_MECHANICS, type RevealMechanic } from "@/components/reveals/types";
 import { ScratchExperience } from "./ScratchExperience";
 
 export const dynamic = "force-dynamic";
@@ -12,12 +13,26 @@ export async function generateMetadata({ params }: PageProps) {
   const { code } = await params;
   const scratch = await db.scratch.findUnique({
     where: { code },
-    select: { annonceTitle: true },
+    select: { annonceTitle: true, revealMechanic: true },
   });
+
+  const title = scratch?.annonceTitle
+    ? `${scratch.annonceTitle} — Qui S'y Gratte`
+    : "Une carte à gratter — Qui S'y Gratte";
+
+  // Teaser adapté à la mécanique (gratter / développer / ouvrir), sans
+  // révéler l'annonce — c'est ce qui s'affiche quand le lien est partagé.
+  const mechanic = (scratch?.revealMechanic ?? "scratch") as RevealMechanic;
+  const verb = (REVEAL_MECHANICS[mechanic] ?? REVEAL_MECHANICS.scratch)
+    .previewVerb;
+  const description = `Tu as reçu une carte ✨ ${verb} pour découvrir l'annonce cachée.`;
+
   return {
-    title: scratch?.annonceTitle
-      ? `${scratch.annonceTitle} — Qui S'y Gratte`
-      : "Une carte à gratter — Qui S'y Gratte",
+    title,
+    description,
+    openGraph: { title, description },
+    // Lien privé partagé directement aux destinataires : pas d'indexation.
+    robots: { index: false, follow: false },
   };
 }
 

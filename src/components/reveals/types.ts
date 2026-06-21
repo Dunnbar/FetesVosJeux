@@ -36,25 +36,35 @@ export type RevealMechanic = "scratch" | "polaroid" | "envelope";
 
 export const REVEAL_MECHANICS: Record<
   RevealMechanic,
-  { label: string; emoji: string; hint: string; demoCode: string }
+  {
+    label: string;
+    emoji: string;
+    hint: string;
+    demoCode: string;
+    /** Verbe d'action court, utilisé dans les aperçus de partage (OG). */
+    previewVerb: string;
+  }
 > = {
   scratch: {
     label: "Ticket à gratter",
     emoji: "🎟️",
     hint: "Frotte la photo avec le doigt ou la souris",
     demoCode: "DEMOSCRATCH",
+    previewVerb: "Gratte",
   },
   polaroid: {
     label: "Polaroid",
     emoji: "📸",
     hint: "Clique pour développer la photo",
     demoCode: "DEMOPOLAROID",
+    previewVerb: "Développe",
   },
   envelope: {
     label: "Enveloppe",
     emoji: "✉️",
     hint: "Ouvre l'enveloppe",
     demoCode: "DEMOENVELOPPE",
+    previewVerb: "Ouvre",
   },
 };
 
