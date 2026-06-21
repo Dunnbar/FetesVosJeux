@@ -19,6 +19,8 @@ import {
 } from "@/lib/pricing";
 import { formatPrice } from "@/lib/format";
 import { Fireworks } from "@/components/Fireworks";
+import { CoverFramer, FramedImage } from "@/components/CoverFramer";
+import { DEFAULT_FRAMING, type Framing } from "@/lib/framing";
 import { createScratchAction } from "./actions";
 
 const TEMPLATE_KEYS = Object.keys(ANNONCE_TEMPLATES) as AnnonceTemplate[];
@@ -44,6 +46,7 @@ export function CreateScratchForm() {
   const [giftCode, setGiftCode] = useState("");
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [coverFileName, setCoverFileName] = useState<string | null>(null);
+  const [framing, setFraming] = useState<Framing>(DEFAULT_FRAMING);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -71,6 +74,7 @@ export function CreateScratchForm() {
     }
     setCoverPreview(URL.createObjectURL(file));
     setCoverFileName(file.name);
+    setFraming(DEFAULT_FRAMING);
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -187,6 +191,17 @@ export function CreateScratchForm() {
             </div>
           )}
         </label>
+
+        {/* Éditeur de cadrage — déplacer / zoomer la photo dans le carré */}
+        {coverPreview && (
+          <div className="mt-6">
+            <p className="text-sm font-bold mb-3">Cadre ta photo dans le carré</p>
+            <CoverFramer src={coverPreview} framing={framing} onChange={setFraming} />
+            <input type="hidden" name="coverPosX" value={framing.posX} />
+            <input type="hidden" name="coverPosY" value={framing.posY} />
+            <input type="hidden" name="coverZoom" value={framing.zoom} />
+          </div>
+        )}
       </section>
 
       {/* ============ 3. Choix du template ============ */}
@@ -404,6 +419,7 @@ export function CreateScratchForm() {
             body={body}
             coverPreview={coverPreview}
             withFireworks={withFireworks}
+            framing={framing}
           />
           <p className="text-xs text-[var(--color-ink-dim)] text-center mt-3 leading-relaxed">
             L&apos;annonce une fois révélée. Le destinataire la découvre après
@@ -440,6 +456,7 @@ export function CreateScratchForm() {
             body={body}
             coverPreview={coverPreview}
             withFireworks={withFireworks}
+            framing={framing}
           />
           <button
             type="button"
@@ -467,6 +484,7 @@ function LivePreview({
   body,
   coverPreview,
   withFireworks,
+  framing,
 }: {
   template: AnnonceTemplate;
   title: string;
@@ -474,6 +492,7 @@ function LivePreview({
   body: string;
   coverPreview: string | null;
   withFireworks: boolean;
+  framing: Framing;
 }) {
   const [face, setFace] = useState<"photo" | "annonce">("annonce");
   return (
@@ -515,11 +534,10 @@ function LivePreview({
             <Fireworks active={withFireworks} contained />
           </>
         ) : coverPreview ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <FramedImage
             src={coverPreview}
+            framing={framing}
             alt="Aperçu de la photo"
-            className="absolute inset-0 w-full h-full object-cover"
           />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--color-cream-2)] text-[var(--color-ink-dim)]">

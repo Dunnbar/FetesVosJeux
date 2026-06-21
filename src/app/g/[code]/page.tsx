@@ -59,6 +59,9 @@ export default async function PublicScratchPage({ params }: PageProps) {
       annonceImagePath={scratch.annonceImagePath}
       withFireworks={scratch.withFireworks}
       withSound={scratch.withSound}
+      coverPosX={scratch.coverPosX}
+      coverPosY={scratch.coverPosY}
+      coverZoom={scratch.coverZoom}
     />
   );
 }

@@ -41,6 +41,12 @@ model Scratch {
   //   - ink         : photo / motif sous le parchemin
   coverImagePath String // ex: "/uploads/abc.jpg"
 
+  // Cadrage de la cover dans le carré (éditeur "déplacer/zoomer").
+  // Point focal en 0–1 (0.5/0.5 = centré) + facteur de zoom (1 = cover de base).
+  coverPosX Float @default(0.5)
+  coverPosY Float @default(0.5)
+  coverZoom Float @default(1)
+
   // L'annonce révélée en dessous : image OU texte selon un template.
   annonceMode      String  @default("text") // "text" | "image"
   annonceImagePath String? // utilisé si annonceMode = "image"

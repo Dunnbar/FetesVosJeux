@@ -19,12 +19,18 @@ export function ScratchReveal({
   annonceImageSrc,
   onReveal,
   size = 450,
+  coverPosX,
+  coverPosY,
+  coverZoom,
 }: RevealCardProps) {
   return (
     <ScratchCanvas
       coverImageSrc={coverImageSrc}
       onReveal={onReveal}
       size={size}
+      coverPosX={coverPosX}
+      coverPosY={coverPosY}
+      coverZoom={coverZoom}
     >
       <AnnonceCard
         mode={annonceMode}

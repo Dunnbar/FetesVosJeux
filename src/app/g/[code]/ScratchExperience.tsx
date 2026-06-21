@@ -22,6 +22,9 @@ interface ScratchExperienceProps {
   annonceImagePath: string | null;
   withFireworks: boolean;
   withSound: boolean;
+  coverPosX: number;
+  coverPosY: number;
+  coverZoom: number;
 }
 
 /**
@@ -45,6 +48,9 @@ export function ScratchExperience({
   annonceImagePath,
   withFireworks,
   withSound,
+  coverPosX,
+  coverPosY,
+  coverZoom,
 }: ScratchExperienceProps) {
   const [revealed, setRevealed] = useState(false);
   const music = useRevealMusic();
@@ -97,6 +103,9 @@ export function ScratchExperience({
             annonceImageSrc={annonceImgSrc}
             onReveal={handleReveal}
             size={canvasSize}
+            coverPosX={coverPosX}
+            coverPosY={coverPosY}
+            coverZoom={coverZoom}
           />
         </div>
 

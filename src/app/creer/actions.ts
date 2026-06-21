@@ -36,6 +36,11 @@ export async function createScratchAction(formData: FormData) {
   const withSound = formData.get("withSound") === "on";
   const amountCents = computeAmountCents({ withFireworks, withSound });
 
+  // Cadrage de la cover (éditeur "déplacer/zoomer"), avec garde-fous.
+  const coverPosX = clampNum(formData.get("coverPosX"), 0, 1, 0.5);
+  const coverPosY = clampNum(formData.get("coverPosY"), 0, 1, 0.5);
+  const coverZoom = clampNum(formData.get("coverZoom"), 1, 3, 1);
+
   if (!title) {
     throw new Error("Le titre de l'annonce est requis.");
   }
@@ -95,6 +100,9 @@ export async function createScratchAction(formData: FormData) {
       buyerEmail: buyerEmail ?? null,
       withFireworks,
       withSound,
+      coverPosX,
+      coverPosY,
+      coverZoom,
       amountCents,
       status: "PENDING",
     },
@@ -111,6 +119,18 @@ export async function createScratchAction(formData: FormData) {
     redirect(`/creer/merci/${code}`);
   }
   redirect(await createCheckoutForScratch(code));
+}
+
+/** Parse un nombre depuis FormData, borné à [min, max], avec valeur par défaut. */
+function clampNum(
+  v: FormDataEntryValue | null,
+  min: number,
+  max: number,
+  fallback: number
+): number {
+  const n = typeof v === "string" ? parseFloat(v) : NaN;
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
 }
 
 /** Extrait une chaîne non vide d'un FormData, ou null. */

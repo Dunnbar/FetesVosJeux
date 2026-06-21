@@ -25,6 +25,11 @@ export interface RevealCardProps {
 
   /** Taille en pixels (carré). */
   size?: number;
+
+  /** Cadrage de la cover : point focal (0–1) + zoom (1 = cover de base). */
+  coverPosX?: number;
+  coverPosY?: number;
+  coverZoom?: number;
 }
 
 export type RevealMechanic = "scratch" | "polaroid" | "envelope";

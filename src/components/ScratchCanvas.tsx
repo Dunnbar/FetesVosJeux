@@ -27,6 +27,10 @@ interface ScratchCanvasProps {
   onReveal?: () => void;
   /** Taille du canvas (carré). */
   size?: number;
+  /** Cadrage de la cover : point focal (0–1) + zoom (1 = cover de base). */
+  coverPosX?: number;
+  coverPosY?: number;
+  coverZoom?: number;
   /** Contenu placé DERRIÈRE le canvas, révélé au fur et à mesure du grattage.
    *  Typiquement : <AnnonceCard ... /> ou une image annonce. */
   children: React.ReactNode;
@@ -37,6 +41,9 @@ export function ScratchCanvas({
   revealThreshold = 30,
   onReveal,
   size = 450,
+  coverPosX = 0.5,
+  coverPosY = 0.5,
+  coverZoom = 1,
   children,
 }: ScratchCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -77,13 +84,17 @@ export function ScratchCanvas({
 
     const img = new Image();
     img.onload = () => {
-      // Crop "object-fit: cover" manuel : on remplit le carré du canvas
-      // en croppant la dimension la plus longue de l'image source.
-      const scale = Math.max(size / img.width, size / img.height);
-      const sw = size / scale;
-      const sh = size / scale;
-      const sx = (img.width - sw) / 2;
-      const sy = (img.height - sh) / 2;
+      // Crop "object-fit: cover" + cadrage (zoom & point focal).
+      // baseScale = remplir le carré ; le zoom rétrécit la zone source visible ;
+      // le point focal (0–1) choisit quelle portion on garde.
+      const baseScale = Math.max(size / img.width, size / img.height);
+      const z = Math.max(1, coverZoom);
+      const sw = size / baseScale / z;
+      const sh = size / baseScale / z;
+      const px = Math.min(1, Math.max(0, coverPosX));
+      const py = Math.min(1, Math.max(0, coverPosY));
+      const sx = px * (img.width - sw);
+      const sy = py * (img.height - sh);
       ctx.globalCompositeOperation = "source-over";
       ctx.drawImage(img, sx, sy, sw, sh, 0, 0, size, size);
       setCoverPainted(true);
@@ -97,7 +108,7 @@ export function ScratchCanvas({
       setCoverPainted(true);
     };
     img.src = coverImageSrc;
-  }, [size, coverImageSrc]);
+  }, [size, coverImageSrc, coverPosX, coverPosY, coverZoom]);
 
   // Calcule le pourcentage de pixels suffisamment effacés.
   // La brosse a un alpha graduel (bords doux) : en grattant, beaucoup de
