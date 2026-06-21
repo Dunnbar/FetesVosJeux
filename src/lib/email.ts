@@ -133,7 +133,7 @@ function renderScratchLinkHtml(args: ScratchLinkEmailArgs): string {
           </tr>
         </table>
         <p style="margin:24px 0 0 0;font-family:'Courier New',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#6b5f75;">
-          Qui S'y Gratte · Qui s'y gratte… découvre.
+          Qui S'y Gratte · Les annonces qui font dire waouh.
         </p>
       </td>
     </tr>
