@@ -38,7 +38,7 @@ interface ScratchCanvasProps {
 
 export function ScratchCanvas({
   coverImageSrc,
-  revealThreshold = 30,
+  revealThreshold = 60,
   onReveal,
   size = 450,
   coverPosX = 0.5,

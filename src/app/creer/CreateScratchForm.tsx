@@ -11,12 +11,7 @@ import {
   REVEAL_MECHANIC_KEYS,
   type RevealMechanic,
 } from "@/components/reveals/types";
-import {
-  BASE_AMOUNT_CENTS,
-  ADDONS,
-  computeAmountCents,
-  bundleDiscountCents,
-} from "@/lib/pricing";
+import { BASE_AMOUNT_CENTS, EFFECTS, computeAmountCents } from "@/lib/pricing";
 import { formatPrice } from "@/lib/format";
 import { Fireworks } from "@/components/Fireworks";
 import { CoverFramer, FramedImage } from "@/components/CoverFramer";
@@ -39,8 +34,7 @@ export function CreateScratchForm() {
   const [body, setBody] = useState("");
   // Aperçu en popup sur mobile (sur desktop il est toujours visible à côté).
   const [showPreview, setShowPreview] = useState(false);
-  const [withFireworks, setWithFireworks] = useState(false);
-  const [withSound, setWithSound] = useState(false);
+  const [withEffects, setWithEffects] = useState(false);
   // Code cadeau optionnel : si saisi et valide, la carte est offerte (pas de Stripe).
   const [showGiftCode, setShowGiftCode] = useState(false);
   const [giftCode, setGiftCode] = useState("");
@@ -51,8 +45,10 @@ export function CreateScratchForm() {
   const [isPending, startTransition] = useTransition();
 
   const config = ANNONCE_TEMPLATES[template];
-  const totalCents = computeAmountCents({ withFireworks, withSound });
-  const discountCents = bundleDiscountCents({ withFireworks, withSound });
+  const totalCents = computeAmountCents({
+    withFireworks: withEffects,
+    withSound: withEffects,
+  });
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     setErrorMsg(null);
@@ -275,26 +271,18 @@ export function CreateScratchForm() {
           Optionnel.
         </p>
 
-        <div className="space-y-3">
-          <AddonToggle
-            name="withFireworks"
-            checked={withFireworks}
-            onChange={setWithFireworks}
-            emoji={ADDONS.fireworks.emoji}
-            label={ADDONS.fireworks.label}
-            description={ADDONS.fireworks.description}
-            priceCents={ADDONS.fireworks.cents}
-          />
-          <AddonToggle
-            name="withSound"
-            checked={withSound}
-            onChange={setWithSound}
-            emoji={ADDONS.sound.emoji}
-            label={ADDONS.sound.label}
-            description={ADDONS.sound.description}
-            priceCents={ADDONS.sound.cents}
-          />
-        </div>
+        <AddonToggle
+          name="withEffects"
+          checked={withEffects}
+          onChange={setWithEffects}
+          emoji={EFFECTS.emoji}
+          label={EFFECTS.label}
+          description={EFFECTS.description}
+          priceCents={EFFECTS.cents}
+        />
+        {/* L'option groupée active à la fois les feux et le son en base. */}
+        <input type="hidden" name="withFireworks" value={withEffects ? "on" : "off"} />
+        <input type="hidden" name="withSound" value={withEffects ? "on" : "off"} />
       </section>
 
       {/* ============ 6. Email du destinataire (toi) ============ */}
@@ -332,20 +320,9 @@ export function CreateScratchForm() {
           </div>
           <div className="text-xs text-[var(--color-ink-dim)] text-right">
             <div>Base : {formatPrice(BASE_AMOUNT_CENTS)}</div>
-            {withFireworks && (
+            {withEffects && (
               <div>
-                + {ADDONS.fireworks.label} :{" "}
-                {formatPrice(ADDONS.fireworks.cents)}
-              </div>
-            )}
-            {withSound && (
-              <div>
-                + {ADDONS.sound.label} : {formatPrice(ADDONS.sound.cents)}
-              </div>
-            )}
-            {discountCents > 0 && (
-              <div className="text-[var(--color-gold)]">
-                Offre 2 options : − {formatPrice(discountCents)}
+                + {EFFECTS.label} : {formatPrice(EFFECTS.cents)}
               </div>
             )}
           </div>
@@ -418,7 +395,7 @@ export function CreateScratchForm() {
             subtitle={subtitle}
             body={body}
             coverPreview={coverPreview}
-            withFireworks={withFireworks}
+            withFireworks={withEffects}
             framing={framing}
           />
           <p className="text-xs text-[var(--color-ink-dim)] text-center mt-3 leading-relaxed">
@@ -455,7 +432,7 @@ export function CreateScratchForm() {
             subtitle={subtitle}
             body={body}
             coverPreview={coverPreview}
-            withFireworks={withFireworks}
+            withFireworks={withEffects}
             framing={framing}
           />
           <button
