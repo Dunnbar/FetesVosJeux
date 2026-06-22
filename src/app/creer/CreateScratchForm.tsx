@@ -11,7 +11,12 @@ import {
   REVEAL_MECHANIC_KEYS,
   type RevealMechanic,
 } from "@/components/reveals/types";
-import { EFFECTS, computeAmountCents, formatBaseCents } from "@/lib/pricing";
+import {
+  FIREWORKS,
+  SOUND,
+  computeAmountCents,
+  formatBaseCents,
+} from "@/lib/pricing";
 import { formatPrice } from "@/lib/format";
 import { Fireworks } from "@/components/Fireworks";
 import { CoverFramer } from "@/components/CoverFramer";
@@ -36,7 +41,8 @@ export function CreateScratchForm() {
   const [body, setBody] = useState("");
   // Aperçu en popup sur mobile (sur desktop il est toujours visible à côté).
   const [showPreview, setShowPreview] = useState(false);
-  const [withEffects, setWithEffects] = useState(false);
+  const [withFireworks, setWithFireworks] = useState(false);
+  const [withSound, setWithSound] = useState(true); // inclus par défaut
   // Code cadeau optionnel : si saisi et valide, la carte est offerte (pas de Stripe).
   const [showGiftCode, setShowGiftCode] = useState(false);
   const [giftCode, setGiftCode] = useState("");
@@ -49,7 +55,7 @@ export function CreateScratchForm() {
   const config = ANNONCE_TEMPLATES[template];
   const totalCents = computeAmountCents({
     formatCount: mechanics.length,
-    withEffects,
+    withFireworks,
   });
 
   // Coche/décoche un format — on garde toujours au moins un format sélectionné.
@@ -122,9 +128,9 @@ export function CreateScratchForm() {
       <section>
         <h2 className="text-xl font-bold mb-2">1. Le ou les formats</h2>
         <p className="text-sm text-[var(--color-ink-dim)] mb-4">
-          Comment la personne découvre ton annonce. Tu peux en choisir
-          plusieurs (même annonce, déclinée) — 1 format&nbsp;: 5&nbsp;€,
-          2&nbsp;: 8&nbsp;€, 3&nbsp;: 10&nbsp;€. Chaque format = un lien.
+          Comment tes proches découvrent l&apos;annonce. Choisis-en plusieurs
+          (même annonce, déclinée) — chaque format est un lien à part, et c&apos;est
+          dégressif.
         </p>
 
         {mechanics.map((m) => (
@@ -162,6 +168,31 @@ export function CreateScratchForm() {
                 >
                   Voir la démo ↗
                 </a>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Échelle de prix dégressive — le palier du nombre de formats choisis
+            est mis en avant. */}
+        <div className="mt-4 flex gap-2">
+          {[1, 2, 3].map((n) => {
+            const on = mechanics.length === n;
+            return (
+              <div
+                key={n}
+                className={`flex-1 text-center rounded-xl border-2 px-2 py-2 transition-colors ${
+                  on
+                    ? "border-[var(--color-rose-deep)] bg-[var(--color-cream-2)] shadow-[3px_3px_0_0_var(--color-gold)]"
+                    : "border-[var(--color-edge)] opacity-70"
+                }`}
+              >
+                <div className="text-base font-bold">
+                  {formatPrice(formatBaseCents(n))}
+                </div>
+                <div className="font-mono text-[0.62rem] uppercase tracking-widest text-[var(--color-ink-dim)]">
+                  {n} format{n > 1 ? "s" : ""}
+                </div>
               </div>
             );
           })}
@@ -294,18 +325,26 @@ export function CreateScratchForm() {
           Optionnel.
         </p>
 
-        <AddonToggle
-          name="withEffects"
-          checked={withEffects}
-          onChange={setWithEffects}
-          emoji={EFFECTS.emoji}
-          label={EFFECTS.label}
-          description={EFFECTS.description}
-          priceCents={EFFECTS.cents}
-        />
-        {/* L'option groupée active à la fois les feux et le son en base. */}
-        <input type="hidden" name="withFireworks" value={withEffects ? "on" : "off"} />
-        <input type="hidden" name="withSound" value={withEffects ? "on" : "off"} />
+        <div className="space-y-3">
+          <AddonToggle
+            name="withFireworks"
+            checked={withFireworks}
+            onChange={setWithFireworks}
+            emoji={FIREWORKS.emoji}
+            label={FIREWORKS.label}
+            description={FIREWORKS.description}
+            priceCents={FIREWORKS.cents}
+          />
+          <AddonToggle
+            name="withSound"
+            checked={withSound}
+            onChange={setWithSound}
+            emoji={SOUND.emoji}
+            label={SOUND.label}
+            description={SOUND.description}
+            priceCents={0}
+          />
+        </div>
       </section>
 
       {/* ============ 6. Email du destinataire (toi) ============ */}
@@ -346,9 +385,9 @@ export function CreateScratchForm() {
               {mechanics.length} format{mechanics.length > 1 ? "s" : ""} :{" "}
               {formatPrice(formatBaseCents(mechanics.length))}
             </div>
-            {withEffects && (
+            {withFireworks && (
               <div>
-                + {EFFECTS.label} : {formatPrice(EFFECTS.cents)}
+                + {FIREWORKS.label} : {formatPrice(FIREWORKS.cents)}
               </div>
             )}
           </div>
@@ -423,7 +462,7 @@ export function CreateScratchForm() {
             subtitle={subtitle}
             body={body}
             coverPreview={coverPreview}
-            withEffects={withEffects}
+            withFireworks={withFireworks}
             framing={framing}
           />
         </div>
@@ -457,7 +496,7 @@ export function CreateScratchForm() {
             subtitle={subtitle}
             body={body}
             coverPreview={coverPreview}
-            withEffects={withEffects}
+            withFireworks={withFireworks}
             framing={framing}
           />
           <button
@@ -487,7 +526,7 @@ function LivePreview({
   subtitle,
   body,
   coverPreview,
-  withEffects,
+  withFireworks,
   framing,
 }: {
   mechanics: RevealMechanic[];
@@ -496,7 +535,7 @@ function LivePreview({
   subtitle: string;
   body: string;
   coverPreview: string | null;
-  withEffects: boolean;
+  withFireworks: boolean;
   framing: Framing;
 }) {
   const [current, setCurrent] = useState<RevealMechanic>(mechanics[0]);
@@ -566,7 +605,7 @@ function LivePreview({
           coverZoom={framing.zoom}
           onReveal={() => setRevealed(true)}
         />
-        <Fireworks active={revealed && withEffects} contained />
+        <Fireworks active={revealed && withFireworks} contained />
       </div>
 
       <p className="text-xs text-[var(--color-ink-dim)] text-center mt-3">
@@ -616,7 +655,7 @@ function AddonToggle({
         <div className="flex items-baseline justify-between gap-3">
           <span className="font-bold">{label}</span>
           <span className="font-mono text-sm text-[var(--color-rose-deep)] whitespace-nowrap">
-            +{formatPrice(priceCents)}
+            {priceCents === 0 ? "Inclus" : `+${formatPrice(priceCents)}`}
           </span>
         </div>
         <p className="text-sm text-[var(--color-ink-dim)] mt-1 leading-relaxed">

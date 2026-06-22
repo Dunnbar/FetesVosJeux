@@ -17,22 +17,32 @@ export const FORMAT_PRICES_CENTS: Record<number, number> = {
 export const BASE_AMOUNT_CENTS = FORMAT_PRICES_CENTS[1];
 
 /**
- * Option unique groupée : sons + feux d'artifice à la révélation, +1 €.
- * S'applique à toute la commande (tous les formats). En base, ça active
- * à la fois `withFireworks` et `withSound`.
+ * Feux d'artifice : option payante (+1 €), plein écran à la révélation.
  */
-export const EFFECTS = {
+export const FIREWORKS = {
   cents: 100, // +1 €
-  label: "Sons & feux d'artifice",
-  emoji: "🎉",
+  label: "Feux d'artifice",
+  emoji: "🎆",
   description:
-    "Feux d'artifice plein écran et musique de fête au moment où le destinataire découvre l'annonce.",
+    "Animation festive plein écran au moment où le destinataire découvre l'annonce.",
+} as const;
+
+/**
+ * Son de fête : INCLUS dans le prix de base (activé par défaut). L'acheteur
+ * peut le désactiver via une case. N'impacte pas le prix.
+ */
+export const SOUND = {
+  label: "Son de fête",
+  emoji: "🎵",
+  description:
+    "Une petite musique se lance à la révélation. Inclus — décoche pour l'enlever.",
 } as const;
 
 interface AmountSelection {
   /** Nombre de formats (mécaniques) achetés : 1, 2 ou 3. */
   formatCount?: number;
-  withEffects?: boolean;
+  /** Feux d'artifice (option payante). Le son n'impacte pas le prix. */
+  withFireworks?: boolean;
 }
 
 /** Prix de base pour un nombre de formats (borné à 1–3). */
@@ -41,7 +51,10 @@ export function formatBaseCents(formatCount: number): number {
   return FORMAT_PRICES_CENTS[n] ?? FORMAT_PRICES_CENTS[1];
 }
 
-/** Montant total = base (selon nb de formats) + effets éventuels. */
+/** Montant total = base (selon nb de formats) + feux d'artifice éventuels. */
 export function computeAmountCents(opts: AmountSelection): number {
-  return formatBaseCents(opts.formatCount ?? 1) + (opts.withEffects ? EFFECTS.cents : 0);
+  return (
+    formatBaseCents(opts.formatCount ?? 1) +
+    (opts.withFireworks ? FIREWORKS.cents : 0)
+  );
 }

@@ -34,10 +34,10 @@ export async function createScratchAction(formData: FormData) {
   const buyerEmail = stringField(formData, "buyerEmail");
   const giftCode = stringField(formData, "giftCode")?.toUpperCase() ?? null;
 
-  // Options payantes — checkbox values arrivent en tant que "on" / absent.
+  // Feux d'artifice = option payante. Son = inclus (case cochée par défaut
+  // côté form) ; décochée → absent du FormData → false.
   const withFireworks = formData.get("withFireworks") === "on";
   const withSound = formData.get("withSound") === "on";
-  const withEffects = withFireworks || withSound;
 
   // Cadrage de la cover (éditeur "déplacer/zoomer"), avec garde-fous.
   const coverPosX = clampNum(formData.get("coverPosX"), 0, 1, 0.5);
@@ -112,7 +112,10 @@ export async function createScratchAction(formData: FormData) {
     redirect(`/creer/merci/${code}`);
   }
 
-  const total = computeAmountCents({ formatCount: mechanics.length, withEffects });
+  const total = computeAmountCents({
+    formatCount: mechanics.length,
+    withFireworks,
+  });
 
   // 3b. Un seul format → une carte, comportement historique.
   if (mechanics.length === 1) {
