@@ -14,7 +14,8 @@ import {
 import { EFFECTS, computeAmountCents, formatBaseCents } from "@/lib/pricing";
 import { formatPrice } from "@/lib/format";
 import { Fireworks } from "@/components/Fireworks";
-import { CoverFramer, FramedImage } from "@/components/CoverFramer";
+import { CoverFramer } from "@/components/CoverFramer";
+import { RevealCard } from "@/components/reveals/RevealCard";
 import { DEFAULT_FRAMING, type Framing } from "@/lib/framing";
 import { createScratchAction } from "./actions";
 
@@ -416,18 +417,15 @@ export function CreateScratchForm() {
             ▸ Aperçu en direct
           </p>
           <LivePreview
+            mechanics={mechanics}
             template={template}
             title={title}
             subtitle={subtitle}
             body={body}
             coverPreview={coverPreview}
-            withFireworks={withEffects}
+            withEffects={withEffects}
             framing={framing}
           />
-          <p className="text-xs text-[var(--color-ink-dim)] text-center mt-3 leading-relaxed">
-            L&apos;annonce une fois révélée. Le destinataire la découvre après
-            avoir gratté ta photo.
-          </p>
         </div>
       </aside>
     </div>
@@ -453,12 +451,13 @@ export function CreateScratchForm() {
             ▸ Aperçu en direct
           </p>
           <LivePreview
+            mechanics={mechanics}
             template={template}
             title={title}
             subtitle={subtitle}
             body={body}
             coverPreview={coverPreview}
-            withFireworks={withEffects}
+            withEffects={withEffects}
             framing={framing}
           />
           <button
@@ -476,79 +475,103 @@ export function CreateScratchForm() {
 }
 
 /**
- * Aperçu en direct, alimenté par les champs du form. Toggle recto/verso :
- *   - « Photo »   : la couverture grattable (ce que le destinataire voit d'abord)
- *   - « Annonce » : l'annonce révélée en dessous
+ * Aperçu en direct. Sans photo : on montre l'annonce (utile pour écrire le
+ * texte). Avec photo : on rend la VRAIE carte interactive, avec un sélecteur
+ * de format si l'acheteur en a choisi plusieurs — il peut tester chaque rendu
+ * (gratter / développer / ouvrir) et voir les feux si l'option est cochée.
  */
 function LivePreview({
+  mechanics,
   template,
   title,
   subtitle,
   body,
   coverPreview,
-  withFireworks,
+  withEffects,
   framing,
 }: {
+  mechanics: RevealMechanic[];
   template: AnnonceTemplate;
   title: string;
   subtitle: string;
   body: string;
   coverPreview: string | null;
-  withFireworks: boolean;
+  withEffects: boolean;
   framing: Framing;
 }) {
-  const [face, setFace] = useState<"photo" | "annonce">("annonce");
+  const [current, setCurrent] = useState<RevealMechanic>(mechanics[0]);
+  const [revealed, setRevealed] = useState(false);
+  const active = mechanics.includes(current) ? current : mechanics[0];
+
+  // Pas encore de photo → aperçu statique de l'annonce (pour éditer le texte).
+  if (!coverPreview) {
+    return (
+      <div>
+        <div className="relative w-full max-w-[340px] aspect-square mx-auto rounded-2xl overflow-hidden border-2 border-[var(--color-ink)] shadow-[6px_6px_0_0_var(--color-gold)]">
+          <AnnonceCard
+            mode="text"
+            template={template}
+            title={title || null}
+            subtitle={subtitle || null}
+            body={body || null}
+          />
+        </div>
+        <p className="text-xs text-[var(--color-ink-dim)] text-center mt-3">
+          Ajoute ta photo pour prévisualiser{" "}
+          {mechanics.length > 1 ? "les formats" : "le format"}.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
-      {/* Toggle recto / verso */}
-      <div className="flex w-fit mx-auto mb-3 p-1 gap-1 rounded-full bg-[var(--color-cream-2)] border-2 border-[var(--color-edge)]">
-        {(
-          [
-            ["photo", "Photo"],
-            ["annonce", "Annonce"],
-          ] as const
-        ).map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setFace(key)}
-            className={`px-4 py-1.5 rounded-full font-mono text-xs uppercase tracking-widest transition-colors ${
-              face === key
-                ? "bg-[var(--color-rose-deep)] text-[var(--color-cream)]"
-                : "text-[var(--color-ink-dim)] hover:text-[var(--color-ink)]"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+      {/* Sélecteur de format (si plusieurs choisis) */}
+      {mechanics.length > 1 && (
+        <div className="flex flex-wrap justify-center gap-1 mb-3">
+          {mechanics.map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => {
+                setCurrent(m);
+                setRevealed(false);
+              }}
+              className={`px-3 py-1.5 rounded-full font-mono text-[0.7rem] uppercase tracking-widest transition-colors ${
+                active === m
+                  ? "bg-[var(--color-rose-deep)] text-[var(--color-cream)]"
+                  : "bg-[var(--color-cream-2)] text-[var(--color-ink-dim)] hover:text-[var(--color-ink)]"
+              }`}
+            >
+              {REVEAL_MECHANICS[m].label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="relative w-full max-w-[340px] mx-auto flex justify-center">
+        <RevealCard
+          key={active}
+          mechanic={active}
+          coverImageSrc={coverPreview}
+          annonceMode="text"
+          annonceTemplate={template}
+          annonceTitle={title || null}
+          annonceSubtitle={subtitle || null}
+          annonceBody={body || null}
+          annonceImageSrc={null}
+          size={300}
+          coverPosX={framing.posX}
+          coverPosY={framing.posY}
+          coverZoom={framing.zoom}
+          onReveal={() => setRevealed(true)}
+        />
+        <Fireworks active={revealed && withEffects} contained />
       </div>
 
-      <div className="relative w-full max-w-[340px] aspect-square mx-auto rounded-2xl overflow-hidden border-2 border-[var(--color-ink)] shadow-[6px_6px_0_0_var(--color-gold)]">
-        {face === "annonce" ? (
-          <>
-            <AnnonceCard
-              mode="text"
-              template={template}
-              title={title || null}
-              subtitle={subtitle || null}
-              body={body || null}
-            />
-            {/* Aperçu des feux d'artifice si l'option est cochée */}
-            <Fireworks active={withFireworks} contained />
-          </>
-        ) : coverPreview ? (
-          <FramedImage
-            src={coverPreview}
-            framing={framing}
-            alt="Aperçu de la photo"
-          />
-        ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--color-cream-2)] text-[var(--color-ink-dim)]">
-            <span className="text-4xl">🖼️</span>
-            <span className="text-sm font-bold">Ta photo ici</span>
-          </div>
-        )}
-      </div>
+      <p className="text-xs text-[var(--color-ink-dim)] text-center mt-3">
+        {REVEAL_MECHANICS[active].previewVerb} pour tester le rendu.
+      </p>
     </div>
   );
 }

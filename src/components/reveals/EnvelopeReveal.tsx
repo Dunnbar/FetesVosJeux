@@ -162,23 +162,37 @@ export function EnvelopeReveal({
             }}
           />
           {/* Sceau de cire — ancré sur la pointe basse du triangle (≈ centre
-              horizontal, juste au-dessus de la pointe). */}
+              horizontal, juste au-dessus de la pointe). Dégradé "cire" +
+              anneau gravé + étincelle, pour un rendu plus joli qu'une lettre. */}
           <div
-            className="absolute left-1/2 -translate-x-1/2 rounded-full shadow-md flex items-center justify-center font-bold text-white"
+            className="absolute left-1/2 -translate-x-1/2 rounded-full flex items-center justify-center"
             style={{
               top: flapHeight - 56 - 6,
               width: 56,
               height: 56,
-              background: "var(--color-rose-deep)",
+              background:
+                "radial-gradient(circle at 35% 30%, #ee9fb7 0%, var(--color-rose-deep) 55%, #b85e7d 100%)",
               boxShadow:
-                "0 4px 10px -2px rgba(45,36,56,0.35), inset 0 2px 4px rgba(255,255,255,0.25), inset 0 -3px 6px rgba(0,0,0,0.18)",
-              fontFamily: "var(--font-display), serif",
-              fontSize: 24,
-              letterSpacing: "-0.02em",
+                "0 4px 10px -2px rgba(45,36,56,0.4), inset 0 2px 5px rgba(255,255,255,0.35), inset 0 -4px 7px rgba(0,0,0,0.22)",
             }}
             aria-hidden
           >
-            Q
+            {/* Anneau gravé */}
+            <span
+              className="absolute rounded-full"
+              style={{ inset: 7, border: "1.5px solid rgba(255,255,255,0.35)" }}
+            />
+            {/* Emblème festif embossé */}
+            <span
+              style={{
+                color: "rgba(255,255,255,0.92)",
+                fontSize: 22,
+                lineHeight: 1,
+                textShadow: "0 1px 1px rgba(0,0,0,0.25)",
+              }}
+            >
+              ✦
+            </span>
           </div>
         </button>
         </div>
