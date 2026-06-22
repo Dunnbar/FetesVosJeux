@@ -16,13 +16,16 @@ import { createCheckoutForScratch, redeemGiftCode } from "@/lib/checkout";
  * cliquer pour payer via Stripe. C'est le webhook Stripe qui passera
  * la carte à PAID + enverra l'email avec le lien.
  */
+const VALID_MECHANICS = ["scratch", "polaroid", "envelope"];
+
 export async function createScratchAction(formData: FormData) {
-  // 1. Validation des champs texte
-  const revealMechanic = String(formData.get("revealMechanic") ?? "scratch");
-  const validMechanics = ["scratch", "polaroid", "envelope"];
-  const safeMechanic = validMechanics.includes(revealMechanic)
-    ? revealMechanic
-    : "scratch";
+  // 1. Formats choisis (1 à 3 mécaniques). Chaque format = une carte/lien.
+  const rawMechanics = formData.getAll("mechanics").map(String);
+  let mechanics = [...new Set(rawMechanics)].filter((m) =>
+    VALID_MECHANICS.includes(m)
+  );
+  if (mechanics.length === 0) mechanics = ["scratch"];
+  mechanics = mechanics.slice(0, 3);
 
   const template = String(formData.get("template") ?? "mariage");
   const title = stringField(formData, "title");
@@ -34,7 +37,7 @@ export async function createScratchAction(formData: FormData) {
   // Options payantes — checkbox values arrivent en tant que "on" / absent.
   const withFireworks = formData.get("withFireworks") === "on";
   const withSound = formData.get("withSound") === "on";
-  const amountCents = computeAmountCents({ withFireworks, withSound });
+  const withEffects = withFireworks || withSound;
 
   // Cadrage de la cover (éditeur "déplacer/zoomer"), avec garde-fous.
   const coverPosX = clampNum(formData.get("coverPosX"), 0, 1, 0.5);
@@ -58,7 +61,7 @@ export async function createScratchAction(formData: FormData) {
     }
   }
 
-  // 2. Upload du fichier de couverture
+  // 2. Upload du fichier de couverture (une seule fois, partagé par tous les formats).
   const file = formData.get("coverFile");
   if (!(file instanceof File) || file.size === 0) {
     throw new Error("Une image de couverture est requise.");
@@ -72,53 +75,73 @@ export async function createScratchAction(formData: FormData) {
 
   const ext = extensionFromMime(file.type);
   const slug = generateFileSlug();
-
-  // Upload via le module storage — Vercel Blob en prod, fs local en dev.
-  // L'URL retournée est directement utilisable en <img src>.
   const { url: coverImagePath } = await uploadCoverImage(file, slug, ext);
 
-  // 3. Génère un code unique
-  const code = await generateUniqueCode(async (candidate) => {
-    const found = await db.scratch.findUnique({
-      where: { code: candidate },
-      select: { code: true },
+  // Contenu commun à toutes les cartes de la commande (seule la mécanique change).
+  const sharedData = {
+    coverImagePath,
+    annonceMode: "text",
+    annonceTemplate: template,
+    annonceTitle: title,
+    annonceSubtitle: subtitle ?? null,
+    annonceBody: body ?? null,
+    buyerEmail: buyerEmail ?? null,
+    withFireworks,
+    withSound,
+    coverPosX,
+    coverPosY,
+    coverZoom,
+  };
+
+  const newCode = () =>
+    generateUniqueCode(async (candidate) => {
+      const found = await db.scratch.findUnique({
+        where: { code: candidate },
+        select: { code: true },
+      });
+      return found !== null;
     });
-    return found !== null;
-  });
 
-  // 4. Insertion en base, status PENDING (paiement Stripe à venir)
-  await db.scratch.create({
-    data: {
-      code,
-      revealMechanic: safeMechanic,
-      coverImagePath,
-      annonceMode: "text",
-      annonceTemplate: template,
-      annonceTitle: title,
-      annonceSubtitle: subtitle ?? null,
-      annonceBody: body ?? null,
-      buyerEmail: buyerEmail ?? null,
-      withFireworks,
-      withSound,
-      coverPosX,
-      coverPosY,
-      coverZoom,
-      amountCents,
-      status: "PENDING",
-    },
-  });
-
-  // 5. Finalisation directe (plus de page d'aperçu intermédiaire — l'aperçu
-  // est déjà dans le formulaire) :
-  //   - code cadeau saisi  → on débloque gratuitement et on file vers "merci"
-  //   - sinon              → paiement Stripe
-  // La page /creer/[code]/preview ne sert plus que de reprise si le paiement
-  // Stripe est annulé (cancel_url).
+  // 3a. Code cadeau → une seule carte offerte (premier format), pas de Stripe.
   if (giftCode) {
+    const code = await newCode();
+    await db.scratch.create({
+      data: { ...sharedData, code, revealMechanic: mechanics[0], amountCents: 0, status: "PENDING" },
+    });
     await redeemGiftCode(code, giftCode);
     redirect(`/creer/merci/${code}`);
   }
-  redirect(await createCheckoutForScratch(code));
+
+  const total = computeAmountCents({ formatCount: mechanics.length, withEffects });
+
+  // 3b. Un seul format → une carte, comportement historique.
+  if (mechanics.length === 1) {
+    const code = await newCode();
+    await db.scratch.create({
+      data: { ...sharedData, code, revealMechanic: mechanics[0], amountCents: total, status: "PENDING" },
+    });
+    redirect(await createCheckoutForScratch(code));
+  }
+
+  // 3c. Plusieurs formats → N cartes liées par groupId, payées ensemble.
+  // La carte "lead" (1er format) porte le montant total et sert au checkout.
+  const groupId = await newCode();
+  let leadCode = "";
+  for (let i = 0; i < mechanics.length; i++) {
+    const code = await newCode();
+    if (i === 0) leadCode = code;
+    await db.scratch.create({
+      data: {
+        ...sharedData,
+        code,
+        revealMechanic: mechanics[i],
+        groupId,
+        amountCents: i === 0 ? total : 0,
+        status: "PENDING",
+      },
+    });
+  }
+  redirect(await createCheckoutForScratch(leadCode));
 }
 
 /** Parse un nombre depuis FormData, borné à [min, max], avec valeur par défaut. */

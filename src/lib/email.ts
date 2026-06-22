@@ -32,6 +32,8 @@ interface ScratchLinkEmailArgs {
   code: string;
   shareUrl: string;
   annonceTitle: string | null;
+  /** Liens à partager. Si plusieurs (commande multi-formats), tous sont listés. */
+  links?: { label: string; url: string }[];
 }
 
 type SendResult =
@@ -85,7 +87,37 @@ export async function sendScratchLinkEmail(
 function renderScratchLinkHtml(args: ScratchLinkEmailArgs): string {
   const title = escapeHtml(args.annonceTitle ?? "Ta carte à gratter");
   const code = escapeHtml(args.code);
-  const url = escapeHtml(args.shareUrl);
+
+  // Un bloc lien par format (ou un seul si commande simple).
+  const list =
+    args.links && args.links.length
+      ? args.links
+      : [{ label: "Lien public", url: args.shareUrl }];
+  const multi = list.length > 1;
+
+  const linkBlocks = list
+    .map((l) => {
+      const url = escapeHtml(l.url);
+      const label = escapeHtml(l.label);
+      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4ecde;border-radius:12px;margin-bottom:12px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 8px 0;font-family:'Courier New',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#6b5f75;">▸ ${label}</p>
+                    <p style="margin:0 0 16px 0;font-family:'Courier New',monospace;font-size:14px;color:#2d2438;word-break:break-all;">
+                      ${url}
+                    </p>
+                    <a href="${url}" style="display:inline-block;background-color:#ef9bb4;color:#2d2438;text-decoration:none;padding:12px 24px;border-radius:999px;border:2px solid #2d2438;font-weight:700;text-transform:uppercase;letter-spacing:1px;font-size:13px;box-shadow:5px 5px 0 0 #e8c547;">
+                      Ouvrir la carte ▸
+                    </a>
+                  </td>
+                </tr>
+              </table>`;
+    })
+    .join("");
+
+  const intro = multi
+    ? `<span style="color:#d77a99;">sont en ligne.</span>`
+    : `<span style="color:#d77a99;">est en ligne.</span>`;
 
   return `<!doctype html>
 <html lang="fr">
@@ -103,25 +135,13 @@ function renderScratchLinkHtml(args: ScratchLinkEmailArgs): string {
               <p style="margin:0 0 12px 0;font-family:'Courier New',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#d77a99;">◆ Ta carte est prête</p>
               <h1 style="margin:0 0 24px 0;font-size:30px;line-height:1.1;font-weight:700;color:#2d2438;">
                 <strong>${title}</strong><br>
-                <span style="color:#d77a99;">est en ligne.</span>
+                ${intro}
               </h1>
             </td>
           </tr>
           <tr>
             <td style="padding:0 36px 8px 36px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4ecde;border-radius:12px;">
-                <tr>
-                  <td style="padding:20px 24px;">
-                    <p style="margin:0 0 8px 0;font-family:'Courier New',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#6b5f75;">▸ Lien public</p>
-                    <p style="margin:0 0 16px 0;font-family:'Courier New',monospace;font-size:14px;color:#2d2438;word-break:break-all;">
-                      ${url}
-                    </p>
-                    <a href="${url}" style="display:inline-block;background-color:#ef9bb4;color:#2d2438;text-decoration:none;padding:12px 24px;border-radius:999px;border:2px solid #2d2438;font-weight:700;text-transform:uppercase;letter-spacing:1px;font-size:13px;box-shadow:5px 5px 0 0 #e8c547;">
-                      Ouvrir la carte ▸
-                    </a>
-                  </td>
-                </tr>
-              </table>
+              ${linkBlocks}
             </td>
           </tr>
           <tr>
@@ -144,10 +164,15 @@ function renderScratchLinkHtml(args: ScratchLinkEmailArgs): string {
 
 function renderScratchLinkText(args: ScratchLinkEmailArgs): string {
   const title = args.annonceTitle ?? "Ta carte à gratter";
-  return `« ${title} » est en ligne.
+  const list =
+    args.links && args.links.length
+      ? args.links
+      : [{ label: "Lien", url: args.shareUrl }];
+  const linksText = list.map((l) => `${l.label} : ${l.url}`).join("\n");
+  return `« ${title} » ${list.length > 1 ? "sont en ligne" : "est en ligne"}.
 
-Lien à partager :
-${args.shareUrl}
+${list.length > 1 ? "Liens" : "Lien"} à partager :
+${linksText}
 
 Code de la carte : ${args.code} (à conserver, seule clé d'accès).
 

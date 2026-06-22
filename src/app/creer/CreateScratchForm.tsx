@@ -11,7 +11,7 @@ import {
   REVEAL_MECHANIC_KEYS,
   type RevealMechanic,
 } from "@/components/reveals/types";
-import { BASE_AMOUNT_CENTS, EFFECTS, computeAmountCents } from "@/lib/pricing";
+import { EFFECTS, computeAmountCents, formatBaseCents } from "@/lib/pricing";
 import { formatPrice } from "@/lib/format";
 import { Fireworks } from "@/components/Fireworks";
 import { CoverFramer, FramedImage } from "@/components/CoverFramer";
@@ -26,7 +26,8 @@ const MAX_SIZE_MB = 10;
 const FIELD_LIMITS = { title: 50, subtitle: 60, body: 140 } as const;
 
 export function CreateScratchForm() {
-  const [revealMechanic, setRevealMechanic] = useState<RevealMechanic>("scratch");
+  // Formats achetés (mécaniques) : 1 à 3. Chaque format = une carte/lien.
+  const [mechanics, setMechanics] = useState<RevealMechanic[]>(["scratch"]);
   const [template, setTemplate] = useState<AnnonceTemplate>("mariage");
   // Contenu contrôlé pour alimenter l'aperçu en direct.
   const [title, setTitle] = useState("");
@@ -46,9 +47,20 @@ export function CreateScratchForm() {
 
   const config = ANNONCE_TEMPLATES[template];
   const totalCents = computeAmountCents({
-    withFireworks: withEffects,
-    withSound: withEffects,
+    formatCount: mechanics.length,
+    withEffects,
   });
+
+  // Coche/décoche un format — on garde toujours au moins un format sélectionné.
+  function toggleMechanic(key: RevealMechanic) {
+    setMechanics((prev) =>
+      prev.includes(key)
+        ? prev.length > 1
+          ? prev.filter((m) => m !== key)
+          : prev
+        : [...prev, key]
+    );
+  }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     setErrorMsg(null);
@@ -107,27 +119,37 @@ export function CreateScratchForm() {
     <form onSubmit={handleSubmit} className="space-y-10">
       {/* ============ 1. Type de carte (mécanique de révélation) ============ */}
       <section>
-        <h2 className="text-xl font-bold mb-2">1. Le type de carte</h2>
+        <h2 className="text-xl font-bold mb-2">1. Le ou les formats</h2>
         <p className="text-sm text-[var(--color-ink-dim)] mb-4">
-          Comment la personne va découvrir ton annonce.
+          Comment la personne découvre ton annonce. Tu peux en choisir
+          plusieurs (même annonce, déclinée) — 1 format&nbsp;: 5&nbsp;€,
+          2&nbsp;: 8&nbsp;€, 3&nbsp;: 10&nbsp;€. Chaque format = un lien.
         </p>
 
-        <input type="hidden" name="revealMechanic" value={revealMechanic} />
+        {mechanics.map((m) => (
+          <input key={m} type="hidden" name="mechanics" value={m} />
+        ))}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {REVEAL_MECHANIC_KEYS.map((key) => {
             const m = REVEAL_MECHANICS[key];
-            const selected = key === revealMechanic;
+            const selected = mechanics.includes(key);
             return (
               <div key={key} className="flex flex-col">
                 <button
                   type="button"
-                  onClick={() => setRevealMechanic(key)}
-                  className={`p-4 rounded-xl border-2 transition-all text-center ${
+                  onClick={() => toggleMechanic(key)}
+                  aria-pressed={selected}
+                  className={`relative p-4 rounded-xl border-2 transition-all text-center ${
                     selected
                       ? "border-[var(--color-rose-deep)] bg-[var(--color-cream-2)] shadow-[4px_4px_0_0_var(--color-gold)]"
                       : "border-[var(--color-edge)] bg-[var(--color-cream-2)] hover:border-[var(--color-rose-deep)]/40"
                   }`}
                 >
+                  {selected && (
+                    <span className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-rose-deep)] text-[var(--color-cream)] text-xs font-bold">
+                      ✓
+                    </span>
+                  )}
                   <div className="text-3xl mb-2">{m.emoji}</div>
                   <div className="text-sm font-bold">{m.label}</div>
                 </button>
@@ -319,7 +341,10 @@ export function CreateScratchForm() {
             </span>
           </div>
           <div className="text-xs text-[var(--color-ink-dim)] text-right">
-            <div>Base : {formatPrice(BASE_AMOUNT_CENTS)}</div>
+            <div>
+              {mechanics.length} format{mechanics.length > 1 ? "s" : ""} :{" "}
+              {formatPrice(formatBaseCents(mechanics.length))}
+            </div>
             {withEffects && (
               <div>
                 + {EFFECTS.label} : {formatPrice(EFFECTS.cents)}
@@ -359,6 +384,7 @@ export function CreateScratchForm() {
               />
               <p className="text-xs text-[var(--color-ink-dim)]">
                 Avec un code valide, ta carte est offerte — pas de paiement.
+                Un code ne couvre qu&apos;un seul format.
               </p>
             </div>
           )}

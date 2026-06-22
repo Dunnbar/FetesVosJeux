@@ -3,6 +3,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { REVEAL_MECHANICS, type RevealMechanic } from "@/components/reveals/types";
 import { CopyLinkButton } from "./CopyLinkButton";
 import { PaymentPending } from "./PaymentPending";
 
@@ -21,18 +22,22 @@ export default async function MerciPage({ params }: PageProps) {
 
   const scratch = await db.scratch.findUnique({
     where: { code },
-    select: { code: true, annonceTitle: true, buyerEmail: true, status: true },
+    select: {
+      code: true,
+      annonceTitle: true,
+      buyerEmail: true,
+      status: true,
+      groupId: true,
+      revealMechanic: true,
+    },
   });
 
   if (!scratch) {
     notFound();
   }
 
-  // L'utilisateur arrive ici juste après avoir payé Stripe (redirect
-  // depuis success_url). Le webhook Stripe pose la carte en PAID quasi
-  // instantanément, mais c'est asynchrone — il y a une milliseconde où
-  // la page peut voir status PENDING. Dans ce cas on rend un composant
-  // client qui va poller jusqu'à ce que la carte soit PAID.
+  // Le webhook Stripe pose la carte en PAID quasi instantanément, mais c'est
+  // asynchrone — tant que ce n'est pas PAID, on poll côté client.
   if (scratch.status !== "PAID") {
     return (
       <>
@@ -44,7 +49,16 @@ export default async function MerciPage({ params }: PageProps) {
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const shareUrl = `${siteUrl}/g/${scratch.code}`;
+
+  // Commande multi-formats : on liste toutes les cartes du groupe.
+  const cards = scratch.groupId
+    ? await db.scratch.findMany({
+        where: { groupId: scratch.groupId },
+        select: { code: true, revealMechanic: true },
+        orderBy: { amountCents: "desc" },
+      })
+    : [{ code: scratch.code, revealMechanic: scratch.revealMechanic }];
+  const multi = cards.length > 1;
 
   return (
     <>
@@ -54,20 +68,19 @@ export default async function MerciPage({ params }: PageProps) {
           ◆ Ta carte est prête
         </p>
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[0.95] mb-10">
-          Voilà ton lien
+          {multi ? "Voilà tes liens" : "Voilà ton lien"}
           <br />
           <span className="text-[var(--color-rose-deep)]">à partager</span>.
         </h1>
 
-        {/* Bannière email — visible si on a une adresse en DB (l'envoi est
-            géré par le webhook Stripe). */}
+        {/* Bannière email — l'envoi est géré par le webhook Stripe. */}
         {scratch.buyerEmail && (
           <div className="mb-8 p-5 rounded-2xl border-2 border-[var(--color-mint)] bg-[var(--color-cream-2)] flex items-start gap-4">
             <div className="text-2xl shrink-0">✉️</div>
             <div className="min-w-0">
               <p className="font-bold text-sm">Email envoyé !</p>
               <p className="text-sm text-[var(--color-ink-dim)] mt-1 break-all">
-                On a envoyé le lien à{" "}
+                On a envoyé {multi ? "les liens" : "le lien"} à{" "}
                 <strong className="text-[var(--color-ink)]">
                   {scratch.buyerEmail}
                 </strong>
@@ -77,31 +90,39 @@ export default async function MerciPage({ params }: PageProps) {
           </div>
         )}
 
-        <div className="card-pack mb-8">
-          <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-ink-dim)] mb-3">
-            ▸ Lien public
-          </p>
-          <p className="font-mono text-lg break-all mb-5 text-[var(--color-ink)]">
-            {shareUrl}
-          </p>
-          <div className="flex items-center gap-3 flex-wrap">
-            <CopyLinkButton url={shareUrl} />
-            <Link
-              href={`/g/${scratch.code}`}
-              className="font-mono text-sm uppercase tracking-widest text-[var(--color-ink-dim)] hover:text-[var(--color-ink)] underline underline-offset-4 decoration-2 decoration-[var(--color-gold)]"
-            >
-              Voir ma carte ▸
-            </Link>
-          </div>
+        <div className="space-y-4 mb-8">
+          {cards.map((c) => {
+            const url = `${siteUrl}/g/${c.code}`;
+            const label =
+              REVEAL_MECHANICS[c.revealMechanic as RevealMechanic]?.label ??
+              "Lien public";
+            return (
+              <div key={c.code} className="card-pack">
+                <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-ink-dim)] mb-3">
+                  ▸ {multi ? label : "Lien public"}
+                </p>
+                <p className="font-mono text-lg break-all mb-5 text-[var(--color-ink)]">
+                  {url}
+                </p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <CopyLinkButton url={url} />
+                  <Link
+                    href={`/g/${c.code}`}
+                    className="font-mono text-sm uppercase tracking-widest text-[var(--color-ink-dim)] hover:text-[var(--color-ink)] underline underline-offset-4 decoration-2 decoration-[var(--color-gold)]"
+                  >
+                    Voir ▸
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         <div className="bg-[var(--color-cream-2)] rounded-2xl p-6 border-2 border-[var(--color-edge)]">
           <p className="text-sm leading-relaxed text-[var(--color-ink-dim)]">
-            Code de la carte :{" "}
-            <strong className="font-mono text-[var(--color-ink)]">
-              {scratch.code}
-            </strong>
-            . Note-le quelque part — c&apos;est la seule clé d&apos;accès.
+            {multi
+              ? "Chaque lien est une clé d'accès unique — note-les quelque part."
+              : "Le code dans le lien est la seule clé d'accès — note-le quelque part."}
           </p>
         </div>
 

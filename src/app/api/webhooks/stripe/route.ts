@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
 import { sendScratchLinkEmail } from "@/lib/email";
+import { REVEAL_MECHANICS, type RevealMechanic } from "@/components/reveals/types";
 
 /**
  * Webhook Stripe — reçoit les notifications de paiement et fait passer
@@ -79,18 +80,41 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Envoi du mail avec le lien partageable. Non bloquant : si Resend
+    // Commande multi-formats : on marque aussi les autres cartes du groupe.
+    let groupCards: { code: string; revealMechanic: string }[] = [
+      { code: scratch.code, revealMechanic: scratch.revealMechanic },
+    ];
+    if (scratch.groupId) {
+      await db.scratch.updateMany({
+        where: { groupId: scratch.groupId, status: { not: "PAID" } },
+        data: { status: "PAID" },
+      });
+      groupCards = await db.scratch.findMany({
+        where: { groupId: scratch.groupId },
+        select: { code: true, revealMechanic: true },
+        orderBy: { amountCents: "desc" }, // lead (montant total) en premier
+      });
+    }
+
+    // Envoi du mail avec le(s) lien(s) partageable(s). Non bloquant : si Resend
     // est en panne, on confirme quand même 200 OK à Stripe (sinon il
     // re-tente le webhook en boucle).
     if (scratch.buyerEmail) {
       const siteUrl =
         process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+      const links = groupCards.map((c) => ({
+        label:
+          REVEAL_MECHANICS[c.revealMechanic as RevealMechanic]?.label ??
+          "Ta carte",
+        url: `${siteUrl}/g/${c.code}`,
+      }));
       try {
         const result = await sendScratchLinkEmail({
           to: scratch.buyerEmail,
           code: scratch.code,
           shareUrl: `${siteUrl}/g/${scratch.code}`,
           annonceTitle: scratch.annonceTitle,
+          links,
         });
         if (!result.sent) {
           console.warn(

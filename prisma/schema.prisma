@@ -78,6 +78,14 @@ model Scratch {
   // payée via Stripe, on garde la trace du code utilisé pour le suivi.
   giftCode String?
 
+  // Commande multi-formats : quand l'acheteur prend 2 ou 3 formats, les
+  // cartes (une par mécanique) partagent ce groupId et sont payées ensemble.
+  // null = carte seule (1 format), comportement historique inchangé.
+  // Le montant total de la commande est porté par la carte "lead" du groupe.
+  groupId String?
+
+  @@index([groupId])
+
   // Analytics légères
   scratchedAt DateTime? // 1ère fois où le destinataire a déclenché la révélation
 

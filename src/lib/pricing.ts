@@ -6,11 +6,20 @@
  * Stripe reçoit ce montant en centimes au moment du checkout.
  */
 
-export const BASE_AMOUNT_CENTS = 500; // 5,00 € — carte avec révélation sans effet
+/** Prix de base selon le nombre de formats achetés (mécaniques distinctes). */
+export const FORMAT_PRICES_CENTS: Record<number, number> = {
+  1: 500, // 5 €
+  2: 800, // 8 €
+  3: 1000, // 10 €
+};
+
+/** Carte simple (1 format) — référence utilisée par défaut. */
+export const BASE_AMOUNT_CENTS = FORMAT_PRICES_CENTS[1];
 
 /**
  * Option unique groupée : sons + feux d'artifice à la révélation, +1 €.
- * (En base, ça active à la fois `withFireworks` et `withSound`.)
+ * S'applique à toute la commande (tous les formats). En base, ça active
+ * à la fois `withFireworks` et `withSound`.
  */
 export const EFFECTS = {
   cents: 100, // +1 €
@@ -20,16 +29,19 @@ export const EFFECTS = {
     "Feux d'artifice plein écran et musique de fête au moment où le destinataire découvre l'annonce.",
 } as const;
 
-interface AddonSelection {
-  withFireworks?: boolean;
-  withSound?: boolean;
+interface AmountSelection {
+  /** Nombre de formats (mécaniques) achetés : 1, 2 ou 3. */
+  formatCount?: number;
+  withEffects?: boolean;
 }
 
-/**
- * Calcule le montant total. Sons et feux sont groupés : dès que l'un est
- * activé, on facture l'option d'effets une seule fois (+1 €).
- */
-export function computeAmountCents(opts: AddonSelection): number {
-  const withEffects = Boolean(opts.withFireworks || opts.withSound);
-  return BASE_AMOUNT_CENTS + (withEffects ? EFFECTS.cents : 0);
+/** Prix de base pour un nombre de formats (borné à 1–3). */
+export function formatBaseCents(formatCount: number): number {
+  const n = Math.min(3, Math.max(1, Math.round(formatCount) || 1));
+  return FORMAT_PRICES_CENTS[n] ?? FORMAT_PRICES_CENTS[1];
+}
+
+/** Montant total = base (selon nb de formats) + effets éventuels. */
+export function computeAmountCents(opts: AmountSelection): number {
+  return formatBaseCents(opts.formatCount ?? 1) + (opts.withEffects ? EFFECTS.cents : 0);
 }

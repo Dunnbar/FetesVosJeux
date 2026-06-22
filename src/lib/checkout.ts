@@ -40,9 +40,12 @@ export async function createCheckoutForScratch(code: string): Promise<string> {
     success_url: `${base}/creer/merci/${code}?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${base}/creer/${code}/preview?canceled=1`,
     customer_email: scratch.buyerEmail ?? undefined,
-    // Le code de la carte est passé en metadata pour que le webhook
-    // sache quelle ligne DB mettre à jour à la réception.
-    metadata: { scratchCode: code },
+    // metadata pour le webhook : le code de la carte, + le groupId si c'est
+    // une commande multi-formats (pour marquer toutes les cartes du groupe).
+    metadata: {
+      scratchCode: code,
+      ...(scratch.groupId ? { groupId: scratch.groupId } : {}),
+    },
     locale: "fr",
   });
 
