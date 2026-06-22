@@ -19,7 +19,7 @@ const monoFont = JetBrains_Mono({
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.quisygratte.fr";
 
-const title = "Qui S'y Gratte — Le faire-part à gratter";
+const title = "Qui S'y Gratte — Les annonces qui font dire waouh";
 const description =
   "Ta photo devient une carte à gratter : tes proches grattent l'écran et découvrent ton annonce. Mariage, naissance, anniversaire — l'effet waouh.";
 
