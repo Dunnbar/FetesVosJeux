@@ -48,6 +48,10 @@ export async function createScratchAction(formData: FormData) {
     throw new Error("Le titre de l'annonce est requis.");
   }
 
+  if (!buyerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail)) {
+    throw new Error("Une adresse email valide est requise.");
+  }
+
   // Si un code cadeau est saisi, on le valide AVANT de créer la carte / uploader
   // l'image — évite de laisser une carte orpheline en cas de code erroné. La
   // consommation atomique réelle se fait juste après la création (redeemGiftCode).

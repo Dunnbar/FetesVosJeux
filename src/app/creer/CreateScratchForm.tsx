@@ -351,7 +351,8 @@ export function CreateScratchForm() {
       <section>
         <h2 className="text-xl font-bold mb-2">6. Ton email</h2>
         <p className="text-sm text-[var(--color-ink-dim)] mb-4">
-          Pour recevoir le lien par mail. Facultatif.
+          Pour recevoir {mechanics.length > 1 ? "tes liens" : "ton lien"} par
+          mail (et le retrouver facilement).
         </p>
 
         <Field
@@ -359,6 +360,7 @@ export function CreateScratchForm() {
           name="buyerEmail"
           type="email"
           placeholder="toi@exemple.fr"
+          required
         />
       </section>
 
