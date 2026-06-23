@@ -4,8 +4,8 @@ export function SiteHeader() {
   return (
     <header className="border-b-2 border-[var(--color-edge)] bg-[var(--color-cream)]/80 backdrop-blur-sm">
       <div className="mx-auto max-w-6xl px-6 py-5 flex items-center justify-between">
-        <Link href="/" className="group inline-flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-ink)] text-lg shadow-[2px_2px_0_0_var(--color-gold)] transition-transform duration-200 group-hover:-rotate-6">
+        <Link href="/" className="group inline-flex items-center gap-2">
+          <span className="text-2xl leading-none transition-transform duration-200 group-hover:-rotate-6">
             🎟️
           </span>
           <span className="font-bold text-xl tracking-tight text-[var(--color-ink)]">
