@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { SiteHeader } from "@/components/SiteHeader";
 import { formatPrice } from "@/lib/format";
@@ -119,9 +120,17 @@ export default async function AdminPage() {
     <>
       <SiteHeader />
       <main className="flex-1 mx-auto max-w-6xl w-full px-6 py-12">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-rose-deep)] mb-2">
-          ◆ Back-office
-        </p>
+        <div className="flex items-center justify-between gap-4 mb-2">
+          <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-rose-deep)]">
+            ◆ Back-office
+          </p>
+          <Link
+            href="/admin/codes"
+            className="font-mono text-xs uppercase tracking-widest text-[var(--color-ink-dim)] hover:text-[var(--color-ink)]"
+          >
+            Codes cadeaux →
+          </Link>
+        </div>
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-8">
           Commandes
         </h1>

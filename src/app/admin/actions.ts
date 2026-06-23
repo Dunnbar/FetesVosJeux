@@ -3,6 +3,32 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { stripe, assertStripeReady } from "@/lib/stripe";
+import { generateUniqueCode } from "@/lib/codes";
+
+/**
+ * Génère N codes cadeaux à usage unique (depuis l'admin).
+ * count borné à 1–50 ; note facultative pour le suivi.
+ */
+export async function generateGiftCodesAction(formData: FormData) {
+  const count = Math.min(
+    50,
+    Math.max(1, parseInt(String(formData.get("count") ?? "1"), 10) || 1)
+  );
+  const note = String(formData.get("note") ?? "").trim() || null;
+
+  for (let i = 0; i < count; i++) {
+    const code = await generateUniqueCode(async (candidate) => {
+      const found = await db.promoCode.findUnique({
+        where: { code: candidate },
+        select: { code: true },
+      });
+      return found !== null;
+    });
+    await db.promoCode.create({ data: { code, note } });
+  }
+
+  revalidatePath("/admin/codes");
+}
 
 /**
  * Rembourse une commande via Stripe et passe ses cartes en REFUNDED.
