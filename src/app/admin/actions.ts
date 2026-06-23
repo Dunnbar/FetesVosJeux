@@ -42,3 +42,23 @@ export async function refundOrderAction(leadCode: string) {
 
   revalidatePath("/admin");
 }
+
+/**
+ * Supprime définitivement une commande (toutes ses cartes).
+ * `leadCode` = code de la carte lead ; le groupe entier est supprimé.
+ */
+export async function deleteOrderAction(leadCode: string) {
+  const lead = await db.scratch.findUnique({
+    where: { code: leadCode },
+    select: { groupId: true },
+  });
+  if (!lead) throw new Error("Commande introuvable.");
+
+  if (lead.groupId) {
+    await db.scratch.deleteMany({ where: { groupId: lead.groupId } });
+  } else {
+    await db.scratch.delete({ where: { code: leadCode } });
+  }
+
+  revalidatePath("/admin");
+}

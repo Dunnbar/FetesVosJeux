@@ -3,6 +3,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { formatPrice } from "@/lib/format";
 import { REVEAL_MECHANICS, type RevealMechanic } from "@/components/reveals/types";
 import { RefundButton } from "./RefundButton";
+import { DeleteOrderButton } from "./DeleteOrderButton";
+import { OrderLinks } from "./OrderLinks";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +30,11 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 export default async function AdminPage() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+  // Les cartes de démo (codes DEMO*) sont exclues de tout l'admin.
   const cards = await db.scratch.findMany({
+    where: { NOT: { code: { startsWith: "DEMO" } } },
     orderBy: { createdAt: "desc" },
     select: {
       code: true,
@@ -38,6 +44,7 @@ export default async function AdminPage() {
       amountCents: true,
       buyerEmail: true,
       giftCode: true,
+      withFireworks: true,
       stripePaymentIntentId: true,
       annonceTitle: true,
       createdAt: true,
@@ -54,7 +61,6 @@ export default async function AdminPage() {
   }
 
   const orders = [...groups.values()].map((groupCards) => {
-    // "lead" = la carte qui porte le montant total.
     const lead = groupCards.reduce(
       (a, b) => (b.amountCents > a.amountCents ? b : a),
       groupCards[0]
@@ -66,10 +72,14 @@ export default async function AdminPage() {
       amountCents: lead.amountCents,
       buyerEmail: lead.buyerEmail,
       giftCode: lead.giftCode,
+      withFireworks: lead.withFireworks,
       annonceTitle: lead.annonceTitle,
       paymentIntentId: lead.stripePaymentIntentId,
-      formats: groupCards.map((c) => mechanicLabel(c.revealMechanic)),
-      codes: groupCards.map((c) => c.code),
+      mechanics: groupCards.map((c) => c.revealMechanic),
+      links: groupCards.map((c) => ({
+        label: mechanicLabel(c.revealMechanic),
+        url: `${siteUrl}/g/${c.code}`,
+      })),
     };
   });
   orders.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
@@ -85,6 +95,26 @@ export default async function AdminPage() {
     { label: "Chiffre d'affaires", value: formatPrice(revenueCents) },
   ];
 
+  // Détail des ventes (commandes payées uniquement).
+  const singleByMech: Record<string, number> = {
+    scratch: 0,
+    polaroid: 0,
+    envelope: 0,
+  };
+  let bundle2 = 0;
+  let bundle3 = 0;
+  let withFireworksCount = 0;
+  for (const o of paid) {
+    if (o.mechanics.length === 1) {
+      singleByMech[o.mechanics[0]] = (singleByMech[o.mechanics[0]] ?? 0) + 1;
+    } else if (o.mechanics.length === 2) {
+      bundle2 += 1;
+    } else if (o.mechanics.length >= 3) {
+      bundle3 += 1;
+    }
+    if (o.withFireworks) withFireworksCount += 1;
+  }
+
   return (
     <>
       <SiteHeader />
@@ -97,7 +127,7 @@ export default async function AdminPage() {
         </h1>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {stats.map((s) => (
             <div
               key={s.label}
@@ -111,18 +141,67 @@ export default async function AdminPage() {
           ))}
         </div>
 
+        {/* Détail des ventes */}
+        <div className="rounded-2xl border-2 border-[var(--color-edge)] bg-[var(--color-cream-2)] p-5 mb-10">
+          <p className="font-mono text-[0.62rem] uppercase tracking-widest text-[var(--color-ink-dim)] mb-4">
+            ▸ Détail des ventes (commandes payées)
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div>
+              <p className="text-xs font-bold mb-2">Format unique</p>
+              <ul className="space-y-1 text-sm text-[var(--color-ink-dim)]">
+                {(["scratch", "polaroid", "envelope"] as const).map((m) => (
+                  <li key={m} className="flex justify-between gap-3">
+                    <span>{mechanicLabel(m)}</span>
+                    <span className="font-bold text-[var(--color-ink)]">
+                      {singleByMech[m]}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs font-bold mb-2">Bundles</p>
+              <ul className="space-y-1 text-sm text-[var(--color-ink-dim)]">
+                <li className="flex justify-between gap-3">
+                  <span>2 formats</span>
+                  <span className="font-bold text-[var(--color-ink)]">
+                    {bundle2}
+                  </span>
+                </li>
+                <li className="flex justify-between gap-3">
+                  <span>3 formats</span>
+                  <span className="font-bold text-[var(--color-ink)]">
+                    {bundle3}
+                  </span>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs font-bold mb-2">Options</p>
+              <ul className="space-y-1 text-sm text-[var(--color-ink-dim)]">
+                <li className="flex justify-between gap-3">
+                  <span>🎆 Avec feux d&apos;artifice</span>
+                  <span className="font-bold text-[var(--color-ink)]">
+                    {withFireworksCount}
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         {/* Tableau des commandes */}
         <div className="overflow-x-auto rounded-2xl border-2 border-[var(--color-edge)]">
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="bg-[var(--color-cream-2)] text-left font-mono text-[0.62rem] uppercase tracking-widest text-[var(--color-ink-dim)]">
                 <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Annonce</th>
-                <th className="px-4 py-3">Formats</th>
+                <th className="px-4 py-3">Annonce & liens</th>
                 <th className="px-4 py-3">Acheteur</th>
                 <th className="px-4 py-3">Montant</th>
                 <th className="px-4 py-3">Statut</th>
-                <th className="px-4 py-3 text-right">Action</th>
+                <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -136,12 +215,7 @@ export default async function AdminPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="font-bold">{o.annonceTitle ?? "—"}</div>
-                    <div className="font-mono text-[0.65rem] text-[var(--color-ink-dim)]">
-                      {o.codes.join(", ")}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-[var(--color-ink-dim)]">
-                    {o.formats.join(" · ")}
+                    <OrderLinks links={o.links} />
                   </td>
                   <td className="px-4 py-3 break-all text-[var(--color-ink-dim)]">
                     {o.buyerEmail ?? "—"}
@@ -167,19 +241,20 @@ export default async function AdminPage() {
                       {o.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    {o.status === "PAID" && o.paymentIntentId ? (
-                      <RefundButton leadCode={o.leadCode} />
-                    ) : (
-                      <span className="text-[var(--color-ink-dim)]">—</span>
-                    )}
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col items-end gap-2">
+                      {o.status === "PAID" && o.paymentIntentId && (
+                        <RefundButton leadCode={o.leadCode} />
+                      )}
+                      <DeleteOrderButton leadCode={o.leadCode} />
+                    </div>
                   </td>
                 </tr>
               ))}
               {orders.length === 0 && (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={6}
                     className="px-4 py-10 text-center text-[var(--color-ink-dim)]"
                   >
                     Aucune commande pour l&apos;instant.
