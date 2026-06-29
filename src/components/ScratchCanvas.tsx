@@ -38,7 +38,7 @@ interface ScratchCanvasProps {
 
 export function ScratchCanvas({
   coverImageSrc,
-  revealThreshold = 45,
+  revealThreshold = 60,
   onReveal,
   size = 450,
   coverPosX = 0.5,
@@ -83,6 +83,12 @@ export function ScratchCanvas({
     ctx.scale(dpr, dpr);
 
     const img = new Image();
+    // L'image cover est servie depuis Vercel Blob (cross-origin) en prod.
+    // Sans CORS, dessiner l'image "tainte" le canvas et getImageData() lève
+    // "The operation is insecure" → la détection de grattage plante et la
+    // carte ne se révèle jamais. crossOrigin="anonymous" évite le taint
+    // (Vercel Blob public renvoie les en-têtes CORS). Doit être posé AVANT src.
+    img.crossOrigin = "anonymous";
     img.onload = () => {
       // Crop "object-fit: cover" + cadrage (zoom & point focal).
       // baseScale = remplir le carré ; le zoom rétrécit la zone source visible ;
