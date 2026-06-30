@@ -22,6 +22,7 @@ interface ScratchExperienceProps {
   coverPosX: number;
   coverPosY: number;
   coverZoom: number;
+  scratchTextOnTop: boolean;
 }
 
 /**
@@ -48,6 +49,7 @@ export function ScratchExperience({
   coverPosX,
   coverPosY,
   coverZoom,
+  scratchTextOnTop,
 }: ScratchExperienceProps) {
   const [revealed, setRevealed] = useState(false);
   const music = useRevealMusic();
@@ -102,6 +104,7 @@ export function ScratchExperience({
             coverPosX={coverPosX}
             coverPosY={coverPosY}
             coverZoom={coverZoom}
+            scratchTextOnTop={scratchTextOnTop}
           />
         </div>
 

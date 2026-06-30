@@ -77,6 +77,7 @@ export default async function PublicScratchPage({ params }: PageProps) {
       coverPosX={scratch.coverPosX}
       coverPosY={scratch.coverPosY}
       coverZoom={scratch.coverZoom}
+      scratchTextOnTop={scratch.scratchTextOnTop}
     />
   );
 }

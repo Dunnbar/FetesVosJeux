@@ -18,9 +18,131 @@ function angle(a: Point, b: Point) {
   return Math.atan2(b.x - a.x, b.y - a.y);
 }
 
+/** Découpe un texte en lignes qui tiennent dans `maxW` (pour la police courante). */
+function wrapText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  font: string,
+  maxW: number
+): string[] {
+  ctx.font = font;
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let cur = "";
+  for (const w of words) {
+    const test = cur ? `${cur} ${w}` : w;
+    if (ctx.measureText(test).width > maxW && cur) {
+      lines.push(cur);
+      cur = w;
+    } else {
+      cur = test;
+    }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+/**
+ * Dessine l'annonce (titre / sous-titre / texte) sur le canvas — couche
+ * grattable du mode inversé. Style sobre et lisible (option 1) : fond crème,
+ * double bord, titre gras, sous-titre italique, filet, texte.
+ */
+function drawCoverText(
+  ctx: CanvasRenderingContext2D,
+  size: number,
+  t: { title: string | null; subtitle: string | null; body: string | null }
+) {
+  const CREAM = "#fbf6ee";
+  const INK = "#2d2438";
+  const INK_DIM = "#6b5f75";
+  const ACCENT = "#d77a99";
+  const FONT = "'Space Grotesk', system-ui, sans-serif";
+
+  ctx.clearRect(0, 0, size, size);
+  ctx.fillStyle = CREAM;
+  ctx.fillRect(0, 0, size, size);
+
+  // Double bord "papeterie".
+  ctx.strokeStyle = ACCENT;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(size * 0.035, size * 0.035, size * 0.93, size * 0.93);
+  ctx.globalAlpha = 0.5;
+  ctx.strokeRect(size * 0.05, size * 0.05, size * 0.9, size * 0.9);
+  ctx.globalAlpha = 1;
+
+  const maxW = size * 0.78;
+  const titleSize = Math.round(size * 0.085);
+  const subSize = Math.round(size * 0.046);
+  const bodySize = Math.round(size * 0.04);
+  const titleFont = `700 ${titleSize}px ${FONT}`;
+  const subFont = `italic ${subSize}px ${FONT}`;
+  const bodyFont = `${bodySize}px ${FONT}`;
+
+  const titleLines = wrapText(ctx, t.title || "", titleFont, maxW);
+  const subLines = t.subtitle ? wrapText(ctx, t.subtitle, subFont, maxW) : [];
+  const bodyLines = t.body ? wrapText(ctx, t.body, bodyFont, maxW) : [];
+
+  const tLh = titleSize * 1.15;
+  const sLh = subSize * 1.4;
+  const bLh = bodySize * 1.5;
+  const gapSub = subLines.length ? size * 0.03 : 0;
+  const gapBody = bodyLines.length ? size * 0.06 : 0;
+  const blockH =
+    titleLines.length * tLh +
+    gapSub +
+    subLines.length * sLh +
+    gapBody +
+    bodyLines.length * bLh;
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  let y = Math.max(size * 0.08, (size - blockH) / 2);
+
+  ctx.fillStyle = INK;
+  ctx.font = titleFont;
+  for (const ln of titleLines) {
+    ctx.fillText(ln, size / 2, y);
+    y += tLh;
+  }
+
+  if (subLines.length) {
+    y += gapSub;
+    ctx.fillStyle = INK_DIM;
+    ctx.font = subFont;
+    for (const ln of subLines) {
+      ctx.fillText(ln, size / 2, y);
+      y += sLh;
+    }
+  }
+
+  if (bodyLines.length) {
+    y += gapBody * 0.45;
+    ctx.strokeStyle = ACCENT;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(size / 2 - size * 0.06, y);
+    ctx.lineTo(size / 2 + size * 0.06, y);
+    ctx.stroke();
+    y += gapBody * 0.55;
+    ctx.fillStyle = INK;
+    ctx.font = bodyFont;
+    for (const ln of bodyLines) {
+      ctx.fillText(ln, size / 2, y);
+      y += bLh;
+    }
+  }
+}
+
 interface ScratchCanvasProps {
   /** URL de l'image qui sert de couverture grattable (uploadée par l'acheteur). */
-  coverImageSrc: string;
+  coverImageSrc?: string;
+  /** Si fourni, on gratte ce TEXTE (dessiné sur le canvas) au lieu de la photo —
+   *  pour le mode inversé "gratter le texte → révéler la photo". */
+  coverText?: {
+    title: string | null;
+    subtitle: string | null;
+    body: string | null;
+  } | null;
   /** Pourcentage de pixels effacés au-delà duquel on déclenche la révélation. */
   revealThreshold?: number;
   /** Callback déclenché une seule fois quand le seuil est atteint. */
@@ -38,6 +160,7 @@ interface ScratchCanvasProps {
 
 export function ScratchCanvas({
   coverImageSrc,
+  coverText,
   revealThreshold = 80,
   onReveal,
   size = 450,
@@ -87,6 +210,30 @@ export function ScratchCanvas({
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
 
+    // Mode inversé : on gratte le TEXTE (dessiné ici sur le canvas), la photo
+    // est révélée derrière. Pas d'image cross-origin → pas de souci de taint.
+    if (coverText) {
+      const paint = () => {
+        if (cancelled) return;
+        drawCoverText(ctx, size, coverText);
+        setCoverPainted(true);
+      };
+      paint();
+      // Redessine quand la police web est prête (1er paint = fallback sinon).
+      if (typeof document !== "undefined" && document.fonts?.ready) {
+        document.fonts.ready.then(paint).catch(() => undefined);
+      }
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (!coverImageSrc) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
     const img = new Image();
     // L'image cover est servie depuis Vercel Blob (cross-origin) en prod.
     // Sans CORS, dessiner l'image "tainte" le canvas et getImageData() lève
@@ -126,7 +273,7 @@ export function ScratchCanvas({
     return () => {
       cancelled = true;
     };
-  }, [size, coverImageSrc, coverPosX, coverPosY, coverZoom]);
+  }, [size, coverImageSrc, coverText, coverPosX, coverPosY, coverZoom]);
 
   // Calcule le pourcentage de pixels suffisamment effacés.
   // La brosse a un alpha graduel (bords doux) : en grattant, beaucoup de

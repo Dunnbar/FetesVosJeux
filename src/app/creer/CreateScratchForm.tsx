@@ -43,6 +43,8 @@ export function CreateScratchForm() {
   const [showPreview, setShowPreview] = useState(false);
   const [withFireworks, setWithFireworks] = useState(false);
   const [withSound, setWithSound] = useState(true); // inclus par défaut
+  // Ticket : false = gratter la photo (révèle texte) ; true = gratter le texte (révèle photo).
+  const [scratchTextOnTop, setScratchTextOnTop] = useState(false);
   // Code cadeau optionnel : si saisi et valide, la carte est offerte (pas de Stripe).
   const [showGiftCode, setShowGiftCode] = useState(false);
   const [giftCode, setGiftCode] = useState("");
@@ -197,6 +199,45 @@ export function CreateScratchForm() {
             );
           })}
         </div>
+
+        {/* Ticket : sens du grattage (photo ↔ texte). */}
+        {mechanics.includes("scratch") && (
+          <div className="mt-4 rounded-xl border-2 border-[var(--color-edge)] bg-[var(--color-cream-2)] p-3">
+            <p className="text-xs font-bold mb-2">
+              🎟️ Ticket — qu&apos;est-ce qu&apos;on gratte ?
+            </p>
+            <div className="flex gap-2">
+              {(
+                [
+                  { val: false, label: "La photo", sub: "révèle le texte" },
+                  { val: true, label: "Le texte", sub: "révèle la photo" },
+                ] as const
+              ).map((o) => (
+                <button
+                  key={String(o.val)}
+                  type="button"
+                  onClick={() => setScratchTextOnTop(o.val)}
+                  aria-pressed={scratchTextOnTop === o.val}
+                  className={`flex-1 rounded-lg border-2 px-3 py-2 text-center transition-colors ${
+                    scratchTextOnTop === o.val
+                      ? "border-[var(--color-rose-deep)] bg-[var(--color-cream)] shadow-[2px_2px_0_0_var(--color-gold)]"
+                      : "border-[var(--color-edge)]"
+                  }`}
+                >
+                  <div className="text-sm font-bold">{o.label}</div>
+                  <div className="text-[0.65rem] text-[var(--color-ink-dim)]">
+                    {o.sub}
+                  </div>
+                </button>
+              ))}
+            </div>
+            <input
+              type="hidden"
+              name="scratchTextOnTop"
+              value={scratchTextOnTop ? "on" : "off"}
+            />
+          </div>
+        )}
       </section>
 
       {/* ============ 2. Upload de l'image cover ============ */}
@@ -466,6 +507,7 @@ export function CreateScratchForm() {
             coverPreview={coverPreview}
             withFireworks={withFireworks}
             framing={framing}
+            scratchTextOnTop={scratchTextOnTop}
           />
         </div>
       </aside>
@@ -500,6 +542,7 @@ export function CreateScratchForm() {
             coverPreview={coverPreview}
             withFireworks={withFireworks}
             framing={framing}
+            scratchTextOnTop={scratchTextOnTop}
           />
           <button
             type="button"
@@ -530,6 +573,7 @@ function LivePreview({
   coverPreview,
   withFireworks,
   framing,
+  scratchTextOnTop,
 }: {
   mechanics: RevealMechanic[];
   template: AnnonceTemplate;
@@ -539,6 +583,7 @@ function LivePreview({
   coverPreview: string | null;
   withFireworks: boolean;
   framing: Framing;
+  scratchTextOnTop: boolean;
 }) {
   const [current, setCurrent] = useState<RevealMechanic>(mechanics[0]);
   const [revealed, setRevealed] = useState(false);
@@ -605,6 +650,7 @@ function LivePreview({
           coverPosX={framing.posX}
           coverPosY={framing.posY}
           coverZoom={framing.zoom}
+          scratchTextOnTop={scratchTextOnTop}
           onReveal={() => setRevealed(true)}
         />
         <Fireworks active={revealed && withFireworks} contained />

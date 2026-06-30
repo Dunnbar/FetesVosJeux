@@ -30,6 +30,9 @@ export interface RevealCardProps {
   coverPosX?: number;
   coverPosY?: number;
   coverZoom?: number;
+
+  /** Ticket à gratter : true = on gratte le texte pour révéler la photo. */
+  scratchTextOnTop?: boolean;
 }
 
 export type RevealMechanic = "scratch" | "polaroid" | "envelope";

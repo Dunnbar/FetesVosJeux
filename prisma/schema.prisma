@@ -47,6 +47,11 @@ model Scratch {
   coverPosY Float @default(0.5)
   coverZoom Float @default(1)
 
+  // Ticket à gratter uniquement — sens du grattage :
+  //   false (défaut) : on gratte la photo, ça révèle le texte
+  //   true           : on gratte le texte, ça révèle la photo
+  scratchTextOnTop Boolean @default(false)
+
   // L'annonce révélée en dessous : image OU texte selon un template.
   annonceMode      String  @default("text") // "text" | "image"
   annonceImagePath String? // utilisé si annonceMode = "image"

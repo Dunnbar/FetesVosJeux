@@ -43,6 +43,8 @@ export async function createScratchAction(formData: FormData) {
   const coverPosX = clampNum(formData.get("coverPosX"), 0, 1, 0.5);
   const coverPosY = clampNum(formData.get("coverPosY"), 0, 1, 0.5);
   const coverZoom = clampNum(formData.get("coverZoom"), 1, 3, 1);
+  // Ticket : on gratte le texte pour révéler la photo (sens inversé).
+  const scratchTextOnTop = formData.get("scratchTextOnTop") === "on";
 
   if (!title) {
     throw new Error("Le titre de l'annonce est requis.");
@@ -95,6 +97,7 @@ export async function createScratchAction(formData: FormData) {
     coverPosX,
     coverPosY,
     coverZoom,
+    scratchTextOnTop,
   };
 
   const newCode = () =>
