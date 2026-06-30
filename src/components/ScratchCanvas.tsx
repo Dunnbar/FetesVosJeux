@@ -73,6 +73,11 @@ export function ScratchCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Garde-fou : si la taille change (mobile : 450 → largeur écran), l'effet
+    // se relance et lance un 2ᵉ chargement d'image. Sans ça, le onload périmé
+    // dessine par-dessus le nouveau → doublon visible avec un PNG transparent.
+    let cancelled = false;
+
     // Backing pixel ratio — bords nets sur écrans hidpi.
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = size * dpr;
@@ -90,6 +95,7 @@ export function ScratchCanvas({
     // (Vercel Blob public renvoie les en-têtes CORS). Doit être posé AVANT src.
     img.crossOrigin = "anonymous";
     img.onload = () => {
+      if (cancelled) return;
       // Crop "object-fit: cover" + cadrage (zoom & point focal).
       // baseScale = remplir le carré ; le zoom rétrécit la zone source visible ;
       // le point focal (0–1) choisit quelle portion on garde.
@@ -102,10 +108,12 @@ export function ScratchCanvas({
       const sx = px * (img.width - sw);
       const sy = py * (img.height - sh);
       ctx.globalCompositeOperation = "source-over";
+      ctx.clearRect(0, 0, size, size);
       ctx.drawImage(img, sx, sy, sw, sh, 0, 0, size, size);
       setCoverPainted(true);
     };
     img.onerror = () => {
+      if (cancelled) return;
       // En cas d'échec de chargement (URL morte, fichier supprimé…), on peint
       // un fallback gris uni pour que le canvas reste grattable et que l'utilisateur
       // accède quand même à l'annonce derrière.
@@ -114,6 +122,10 @@ export function ScratchCanvas({
       setCoverPainted(true);
     };
     img.src = coverImageSrc;
+
+    return () => {
+      cancelled = true;
+    };
   }, [size, coverImageSrc, coverPosX, coverPosY, coverZoom]);
 
   // Calcule le pourcentage de pixels suffisamment effacés.
