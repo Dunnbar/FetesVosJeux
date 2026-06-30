@@ -30,6 +30,7 @@ export function EnvelopeReveal({
 }: RevealCardProps) {
   const [opened, setOpened] = useState(false);
   const [cardOut, setCardOut] = useState(false);
+  const [zoomed, setZoomed] = useState(false);
   const revealedRef = useRef(false);
 
   // Proportions paysage : envelope ratio ~ 1 : 0.62 (style enveloppe DL).
@@ -61,6 +62,7 @@ export function EnvelopeReveal({
   };
 
   return (
+    <>
     <div
       className="relative inline-block select-none transition-[height] duration-700 ease-out"
       style={{
@@ -87,8 +89,14 @@ export function EnvelopeReveal({
             body={annonceBody}
             imageSrc={annonceImageSrc}
           />
-          {/* Vignette polaroid du cover, coin bas-droit. */}
-          <div className="absolute bottom-2 right-2 w-[60px] h-[60px] rounded-md overflow-hidden border-2 border-white shadow-md bg-[var(--color-cream-3)]">
+          {/* Vignette du cover, coin bas-droit — cliquable pour agrandir. */}
+          <button
+            type="button"
+            onClick={() => setZoomed(true)}
+            aria-label="Agrandir la photo"
+            title="Agrandir la photo"
+            className="absolute bottom-2 right-2 w-[60px] h-[60px] rounded-md overflow-hidden border-2 border-white shadow-md bg-[var(--color-cream-3)] cursor-zoom-in p-0"
+          >
             <Image
               src={coverImageSrc}
               alt=""
@@ -97,7 +105,7 @@ export function EnvelopeReveal({
               className="w-full h-full object-cover"
               unoptimized
             />
-          </div>
+          </button>
         </div>
       </div>
 
@@ -198,5 +206,25 @@ export function EnvelopeReveal({
         </div>
       </div>
     </div>
+
+      {/* Lightbox : la photo en grand au clic sur la vignette. */}
+      {zoomed && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 cursor-zoom-out"
+          onClick={() => setZoomed(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <Image
+            src={coverImageSrc}
+            alt=""
+            width={1000}
+            height={1000}
+            unoptimized
+            className="max-w-[92vw] max-h-[88vh] w-auto h-auto object-contain rounded-lg shadow-2xl"
+          />
+        </div>
+      )}
+    </>
   );
 }

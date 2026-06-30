@@ -3,10 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { RevealCard } from "@/components/reveals/RevealCard";
-import {
-  REVEAL_MECHANICS,
-  type RevealMechanic,
-} from "@/components/reveals/types";
+import { type RevealMechanic } from "@/components/reveals/types";
 import { Fireworks } from "@/components/Fireworks";
 import { MusicButton, useRevealMusic } from "@/components/RevealMusic";
 
@@ -32,7 +29,7 @@ interface ScratchExperienceProps {
  * "Gratte la photo / pour découvrir" → "[verbe] / pour découvrir".
  */
 const HEADLINE_VERB: Record<RevealMechanic, string> = {
-  scratch: "Gratte la photo",
+  scratch: "Gratte le ticket",
   polaroid: "Développe le Polaroid",
   envelope: "Ouvre l'enveloppe",
 };
@@ -74,7 +71,6 @@ export function ScratchExperience({
     ? revealMechanic
     : "scratch") as RevealMechanic;
   const verb = HEADLINE_VERB[mechanic];
-  const hint = REVEAL_MECHANICS[mechanic].hint;
 
   const showFireworks = revealed && withFireworks;
 
@@ -108,12 +104,6 @@ export function ScratchExperience({
             coverZoom={coverZoom}
           />
         </div>
-
-        {!revealed && (
-          <p className="mt-6 font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-night-text-dim)]">
-            ▸ {hint}
-          </p>
-        )}
 
         {/* CTA viral — apparaît après la révélation */}
         <div
