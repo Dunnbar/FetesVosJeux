@@ -3,11 +3,21 @@
  *
  * Donne vie au produit sans interaction : la photo cover "se gratte"
  * en loop et révèle l'annonce dessous, puis revient. Réalisé en pur
- * CSS (keyframes définies dans globals.css).
+ * CSS (keyframes définies dans globals.css) — donc Server Component,
+ * zéro JS envoyé au navigateur.
+ *
+ * Affichée sur TOUS les écrans : le trafic est à dominante mobile, et
+ * c'est la seule chose de la home qui montre ce que fait le produit.
+ * La carte est plus étroite sous sm pour deux raisons : les sparkles en
+ * débord (-right-6) doivent tenir dans le px-6 de la section — au-delà on
+ * gagne une barre de scroll horizontale — et à 320 px elle faisait 400 px
+ * de haut, ce qui suffisait à repousser le CTA et le prix sous la ligne de
+ * flottaison. À 220 px (donc 275 px de haut), son sommet reste visible au
+ * premier écran sans rien pousser.
  */
 export function HeroAutoScratch() {
   return (
-    <div className="relative w-full max-w-[320px] aspect-[4/5] mx-auto">
+    <div className="relative w-full max-w-[220px] sm:max-w-[320px] aspect-[4/5] mx-auto">
       {/* Halo doré décoratif derrière la carte */}
       <div
         aria-hidden
@@ -20,7 +30,7 @@ export function HeroAutoScratch() {
         style={{ animation: "hero-float 4s ease-in-out infinite" }}
       >
         {/* Couche révélée (annonce) — toujours présente derrière */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 bg-[var(--color-cream)]">
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-5 sm:px-6 bg-[var(--color-cream)]">
           {/* Double cadre festif */}
           <div
             aria-hidden
@@ -34,7 +44,7 @@ export function HeroAutoScratch() {
           <p className="font-mono text-[0.6rem] uppercase tracking-[0.4em] text-[var(--color-rose-deep)] mb-3">
             ✦ ♥ ✦
           </p>
-          <h3 className="text-2xl font-bold tracking-tight text-[var(--color-ink)]">
+          <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--color-ink)]">
             Margaux & Antoine
           </h3>
           <p className="mt-1 text-sm italic text-[var(--color-ink-dim)]">

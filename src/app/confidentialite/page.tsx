@@ -1,8 +1,18 @@
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { OG_BASE } from "@/lib/seo";
+
+const titre = "Politique de confidentialité — Qui S'y Gratte";
+const description =
+  "Quelles données Qui S'y Gratte collecte, pourquoi, combien de temps, et comment tu les fais effacer.";
 
 export const metadata = {
-  title: "Politique de confidentialité — Qui S'y Gratte",
+  title: titre,
+  description,
+  // Sans ça, la page hériterait du canonical du layout racine.
+  alternates: { canonical: "/confidentialite" },
+  // Et sans celui-ci, de l'openGraph de la home — titre et og:url compris.
+  openGraph: { ...OG_BASE, url: "/confidentialite", title: titre, description },
 };
 
 export default function ConfidentialitePage() {
@@ -10,7 +20,7 @@ export default function ConfidentialitePage() {
     <>
       <SiteHeader />
       <main className="flex-1 mx-auto max-w-3xl w-full px-6 py-12 sm:py-16">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-rose-deep)] mb-4">
+        <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-rose-text)] mb-4">
           ◆ Vie privée · RGPD
         </p>
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[0.95] mb-4">
@@ -128,13 +138,25 @@ export default function ConfidentialitePage() {
           </section>
 
           <section>
-            <h2>7. Cookies</h2>
+            <h2>7. Cookies et mesure d&apos;audience</h2>
             <p>
-              Le Site n&apos;utilise pas de cookies de suivi publicitaire ni de
-              mesure d&apos;audience. Seuls des cookies strictement nécessaires au
-              fonctionnement peuvent être déposés. Le prestataire de paiement
-              (Stripe) peut déposer ses propres cookies lors du paiement, à des
-              fins de sécurité.
+              Le Site n&apos;utilise pas de cookies de suivi publicitaire. Seuls
+              des cookies strictement nécessaires au fonctionnement peuvent être
+              déposés. Le prestataire de paiement (Stripe) peut déposer ses
+              propres cookies lors du paiement, à des fins de sécurité.
+            </p>
+            <p>
+              Le Site utilise Vercel Web Analytics pour une mesure
+              d&apos;audience anonyme. Cet outil ne dépose aucun cookie et
+              n&apos;écrit rien sur ton appareil : les visiteurs sont distingués
+              par une empreinte technique calculée côté serveur à partir de la
+              requête, automatiquement supprimée au bout de 24 heures. Les
+              données collectées (page consultée, site référent, pays, type
+              d&apos;appareil, navigateur) sont agrégées et ne permettent pas de
+              t&apos;identifier. Les liens privés des cartes (/g/…) sont
+              anonymisés avant tout envoi : le code de ta carte n&apos;est jamais
+              transmis, pas plus que ton email ou le contenu de ton annonce.
+              Aucun consentement n&apos;est donc requis pour cette mesure.
             </p>
           </section>
         </div>

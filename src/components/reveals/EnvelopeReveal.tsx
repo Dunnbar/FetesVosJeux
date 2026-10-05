@@ -27,6 +27,7 @@ export function EnvelopeReveal({
   annonceImageSrc,
   onReveal,
   size = 450,
+  alt = "",
 }: RevealCardProps) {
   const [opened, setOpened] = useState(false);
   const [cardOut, setCardOut] = useState(false);
@@ -99,7 +100,7 @@ export function EnvelopeReveal({
           >
             <Image
               src={coverImageSrc}
-              alt=""
+              alt={alt}
               width={60}
               height={60}
               className="w-full h-full object-cover"
@@ -217,7 +218,7 @@ export function EnvelopeReveal({
         >
           <Image
             src={coverImageSrc}
-            alt=""
+            alt={alt}
             width={1000}
             height={1000}
             unoptimized

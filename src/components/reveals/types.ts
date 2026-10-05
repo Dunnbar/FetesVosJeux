@@ -33,6 +33,16 @@ export interface RevealCardProps {
 
   /** Ticket à gratter : true = on gratte le texte pour révéler la photo. */
   scratchTextOnTop?: boolean;
+
+  /**
+   * Texte alternatif de la cover.
+   *
+   * Vide par défaut : sur une carte reçue, la photo est la surprise — la
+   * décrire à côté la déflore, et le destinataire sait déjà ce qu'il
+   * regarde. Il n'est renseigné que par les démos des pages SEO, où la
+   * photo est au contraire le contenu que Google doit pouvoir lire.
+   */
+  alt?: string;
 }
 
 export type RevealMechanic = "scratch" | "polaroid" | "envelope";

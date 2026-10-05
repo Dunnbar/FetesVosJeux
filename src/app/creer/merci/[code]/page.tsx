@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { SITE_URL } from "@/lib/site";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { REVEAL_MECHANICS, type RevealMechanic } from "@/components/reveals/types";
 import { CopyLinkButton } from "./CopyLinkButton";
 import { PaymentPending } from "./PaymentPending";
+import { MerciPageView } from "./MerciPageView";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +50,11 @@ export default async function MerciPage({ params }: PageProps) {
     );
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  // SITE_URL et pas un `?? "http://localhost:3000"` local : c'est le lien
+  // que l'acheteur copie juste après avoir payé. Sur un déploiement de
+  // preview où la variable n'est définie que pour Production, l'ancien
+  // fallback lui servait un lien vers localhost.
+  const siteUrl = SITE_URL;
 
   // Commande multi-formats : on liste toutes les cartes du groupe.
   const cards = scratch.groupId
@@ -63,8 +69,9 @@ export default async function MerciPage({ params }: PageProps) {
   return (
     <>
       <SiteHeader />
+      <MerciPageView formats={cards.length} />
       <main className="flex-1 mx-auto max-w-2xl w-full px-6 py-16">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-gold-deep)] mb-4">
+        <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-gold-text)] mb-4">
           ◆ Ta carte est prête
         </p>
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[0.95] mb-10">
@@ -105,7 +112,7 @@ export default async function MerciPage({ params }: PageProps) {
                   {url}
                 </p>
                 <div className="flex items-center gap-3 flex-wrap">
-                  <CopyLinkButton url={url} />
+                  <CopyLinkButton url={url} formats={cards.length} />
                   <Link
                     href={`/g/${c.code}`}
                     className="font-mono text-sm uppercase tracking-widest text-[var(--color-ink-dim)] hover:text-[var(--color-ink)] underline underline-offset-4 decoration-2 decoration-[var(--color-gold)]"
@@ -127,8 +134,9 @@ export default async function MerciPage({ params }: PageProps) {
         </div>
 
         <div className="mt-12">
+          {/* `?src=merci` : distingue le réachat immédiat du trafic home. */}
           <Link
-            href="/creer"
+            href="/creer?src=merci"
             className="font-mono text-sm uppercase tracking-widest text-[var(--color-ink-dim)] hover:text-[var(--color-ink)]"
           >
             ← Créer une autre carte

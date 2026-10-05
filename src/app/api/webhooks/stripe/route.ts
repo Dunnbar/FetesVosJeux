@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
 import { sendScratchLinkEmail } from "@/lib/email";
+import { SITE_URL } from "@/lib/site";
 import { REVEAL_MECHANICS, type RevealMechanic } from "@/components/reveals/types";
 
 /**
@@ -100,8 +101,7 @@ export async function POST(req: NextRequest) {
     // est en panne, on confirme quand même 200 OK à Stripe (sinon il
     // re-tente le webhook en boucle).
     if (scratch.buyerEmail) {
-      const siteUrl =
-        process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+      const siteUrl = SITE_URL;
       const links = groupCards.map((c) => ({
         label:
           REVEAL_MECHANICS[c.revealMechanic as RevealMechanic]?.label ??

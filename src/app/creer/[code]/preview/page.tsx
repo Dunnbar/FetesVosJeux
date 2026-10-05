@@ -6,6 +6,10 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Aperçu de ta carte — Qui S'y Gratte",
+  // Lien privé, photo de l'acheteur, annonce pas encore payée : jamais dans
+  // l'index. Un seul partage de cette URL (forum, ticket de support, doc
+  // partagé) suffirait sinon à faire indexer l'annonce d'un client.
+  robots: { index: false, follow: false },
 };
 
 interface PageProps {

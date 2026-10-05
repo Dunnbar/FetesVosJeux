@@ -20,6 +20,7 @@ export function PolaroidReveal({
   annonceTemplate,
   onReveal,
   size = 320,
+  alt = "",
 }: RevealCardProps) {
   const [developing, setDeveloping] = useState(false);
   const [developed, setDeveloped] = useState(false);
@@ -74,7 +75,7 @@ export function PolaroidReveal({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={coverImageSrc}
-            alt=""
+            alt={alt}
             draggable={false}
             className="block w-full h-full object-cover select-none"
             style={{

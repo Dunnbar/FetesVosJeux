@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { SITE_URL } from "@/lib/site";
 import { SiteHeader } from "@/components/SiteHeader";
 import { formatPrice } from "@/lib/format";
 import { REVEAL_MECHANICS, type RevealMechanic } from "@/components/reveals/types";
@@ -31,7 +32,7 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 export default async function AdminPage() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = SITE_URL;
 
   // Les cartes de démo (codes DEMO*) sont exclues de tout l'admin.
   const cards = await db.scratch.findMany({
@@ -121,7 +122,7 @@ export default async function AdminPage() {
       <SiteHeader />
       <main className="flex-1 mx-auto max-w-6xl w-full px-6 py-12">
         <div className="flex items-center justify-between gap-4 mb-2">
-          <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-rose-deep)]">
+          <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-rose-text)]">
             ◆ Back-office
           </p>
           <Link

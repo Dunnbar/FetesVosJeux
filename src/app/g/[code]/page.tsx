@@ -49,7 +49,7 @@ export default async function PublicScratchPage({ params }: PageProps) {
     return (
       <main className="flex-1 flex items-center justify-center px-6 py-20">
         <div className="max-w-md text-center">
-          <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-gold-deep)] mb-6">
+          <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-gold-text)] mb-6">
             ◆ Carte en attente
           </p>
           <h1 className="text-3xl font-bold mb-4">Pas encore prête.</h1>

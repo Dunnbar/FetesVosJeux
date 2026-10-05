@@ -153,15 +153,21 @@ dans PlanetHoster comme nameservers du domaine.
 
 Une fois le domaine branché :
 1. Vercel → **Settings** → **Environment Variables**
-2. Édite `NEXT_PUBLIC_SITE_URL` → `https://quisygratte.fr`
-3. **Redeploy** pour que la valeur soit picked up
+2. Édite `NEXT_PUBLIC_SITE_URL` → `https://www.quisygratte.fr`
+   ⚠️ **avec le `www`**. L'apex `quisygratte.fr` répond 308 vers `www` : un
+   canonical, un sitemap ou un `og:url` sur l'apex désignent donc une URL de
+   redirection, que Search Console classe en « Page avec redirection ».
+   `src/lib/site.ts` normalise l'apex en `www` par sécurité, mais autant que
+   la variable soit juste à la source.
+3. **Redeploy** pour que la valeur soit picked up — les `NEXT_PUBLIC_*` sont
+   inlinées au moment du build, changer la variable ne suffit pas.
 
 ---
 
 ## 8. Vérifier que tout marche
 
-- https://quisygratte.fr → homepage
-- https://quisygratte.fr/creer → formulaire, upload une vraie image, submit
+- https://www.quisygratte.fr → homepage
+- https://www.quisygratte.fr/creer → formulaire, upload une vraie image, submit
 - Tu reçois l'email (si Resend configuré)
 - Le lien `/g/CODE` rend l'image hébergée sur Vercel Blob
 - Tu grattes, l'annonce apparaît, le CTA viral pointe vers `/creer`

@@ -1,8 +1,18 @@
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { OG_BASE } from "@/lib/seo";
+
+const titre = "Conditions Générales de Vente — Qui S'y Gratte";
+const description =
+  "Les conditions de vente de Qui S'y Gratte : paiement unique, livraison du lien, droit de rétractation sur un contenu numérique.";
 
 export const metadata = {
-  title: "Conditions Générales de Vente — Qui S'y Gratte",
+  title: titre,
+  description,
+  // Sans ça, la page hériterait du canonical du layout racine.
+  alternates: { canonical: "/cgv" },
+  // Et sans celui-ci, de l'openGraph de la home — titre et og:url compris.
+  openGraph: { ...OG_BASE, url: "/cgv", title: titre, description },
 };
 
 /**
@@ -16,7 +26,7 @@ export default function CGVPage() {
     <>
       <SiteHeader />
       <main className="flex-1 mx-auto max-w-3xl w-full px-6 py-12 sm:py-16">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-rose-deep)] mb-4">
+        <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-rose-text)] mb-4">
           ◆ Informations légales
         </p>
         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[0.95] mb-4">

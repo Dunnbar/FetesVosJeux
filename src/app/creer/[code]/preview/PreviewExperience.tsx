@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { AnnonceCard } from "@/components/AnnonceCard";
 import { payScratchAction, redeemGiftCodeAction } from "./actions";
 import { formatPrice } from "@/lib/format";
+import { track } from "@/lib/analytics";
 
 interface PreviewExperienceProps {
   code: string;
@@ -48,8 +49,19 @@ export function PreviewExperience({
 
   const annonceImgSrc = annonceImagePath ? toPublicUrl(annonceImagePath) : null;
 
+  // Marche 4 du funnel. Attention à la lecture : cette page n'est atteinte
+  // qu'après une annulation Stripe ou une reprise — c'est du RATTRAPAGE,
+  // pas le parcours nominal (lui va du formulaire droit chez Stripe).
+  const vueEnvoyee = useRef(false);
+  useEffect(() => {
+    if (vueEnvoyee.current) return;
+    vueEnvoyee.current = true;
+    track("apercu_vue", { cents: amountCents, annule: canceled });
+  }, [amountCents, canceled]);
+
   function handlePay() {
     setErrorMsg(null);
+    track("apercu_paiement_clic", { cents: amountCents });
     startTransition(async () => {
       try {
         await payScratchAction(code);

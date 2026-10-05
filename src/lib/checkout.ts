@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { SITE_URL } from "@/lib/site";
 import { stripe, assertStripeReady } from "@/lib/stripe";
 import { sendScratchLinkEmail } from "@/lib/email";
 
@@ -12,8 +13,13 @@ import { sendScratchLinkEmail } from "@/lib/email";
  * erreur. La redirection reste dans les Server Actions appelantes.
  */
 
-const siteUrl = () =>
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+/**
+ * Une seule source pour l'URL publique (src/lib/site.ts). Avant, ce fichier
+ * retombait sur localhost:3000 quand le reste du site retombait sur
+ * www.quisygratte.fr : un build sans NEXT_PUBLIC_SITE_URL avait un SEO sain
+ * ET renvoyait l'acheteur de Stripe sur localhost.
+ */
+const siteUrl = () => SITE_URL;
 
 /** Crée une session Stripe Checkout pour la carte et renvoie l'URL de paiement. */
 export async function createCheckoutForScratch(code: string): Promise<string> {

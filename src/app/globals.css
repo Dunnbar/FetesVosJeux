@@ -22,6 +22,17 @@
   --color-mint: #b5dcc1;          /* accent secondaire (sauge douce) */
   --color-gold: #e8c547;          /* doré chaleureux */
   --color-gold-deep: #c9a52d;
+
+  /* Variantes TEXTE des deux accents.
+     `gold-deep` sur crème ne fait que 2,19:1 et `rose-deep` 2,74:1 — très
+     en dessous des 4,5:1 exigés par WCAG AA pour du texte. Tant que c'est
+     un aplat, une bordure ou un trait, ça n'a pas d'importance ; dès que
+     l'accent porte des lettres (les kickers en mono 12 px majuscules avec
+     tracking large, les liens de maillage interne), il faut ces deux-là.
+     Mesuré sur --color-cream : 5,27:1 pour l'or, 5,23:1 pour le rose ;
+     sur --color-cream-2 (surfaces élevées) : 4,83:1 et 4,80:1. */
+  --color-gold-text: #7d6410;
+  --color-rose-text: #a8456b;
   --color-peach: #f2b594;         /* pop chaud */
 
   --color-edge: rgba(45, 36, 56, 0.12);

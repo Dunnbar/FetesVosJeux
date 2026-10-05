@@ -11,6 +11,9 @@ export function SiteFooter() {
           </p>
           <nav className="flex flex-wrap items-center gap-x-5 gap-y-2">
             {[
+              // Le hub d'idées est un lien de site, pas une mention légale —
+              // il ouvre la liste, les trois suivants sont obligatoires.
+              { href: "/idees", label: "Idées" },
               { href: "/cgv", label: "CGV" },
               { href: "/mentions-legales", label: "Mentions légales" },
               { href: "/confidentialite", label: "Confidentialité" },

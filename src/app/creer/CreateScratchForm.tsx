@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import {
   ANNONCE_TEMPLATES,
   AnnonceCard,
@@ -22,6 +22,7 @@ import { Fireworks } from "@/components/Fireworks";
 import { CoverFramer } from "@/components/CoverFramer";
 import { RevealCard } from "@/components/reveals/RevealCard";
 import { DEFAULT_FRAMING, type Framing } from "@/lib/framing";
+import { track } from "@/lib/analytics";
 import { createScratchAction } from "./actions";
 
 const TEMPLATE_KEYS = Object.keys(ANNONCE_TEMPLATES) as AnnonceTemplate[];
@@ -54,6 +55,50 @@ export function CreateScratchForm() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  /**
+   * Pré-réglage depuis une landing /idees/<slug>.
+   *
+   * Le CTA de ces pages emporte `?modele=` et `?format=` : quelqu'un qui
+   * vient de jouer un polaroid sur la page « naissance » arrivait ici sur un
+   * formulaire réglé d'office sur « ticket à gratter » + modèle « mariage »,
+   * et devait refaire à la main le choix qu'il venait de faire.
+   *
+   * Pourquoi un effet, et pas mieux :
+   *   • `useSearchParams()` ferait basculer /creer en rendu client et
+   *     réclamerait un <Suspense> — la page est statique, on y tient ;
+   *   • un initialiseur `useState(() => lireUrl())` lirait l'URL pendant le
+   *     premier rendu client, qui doit rester identique au HTML prérendu au
+   *     build : hydratation désynchronisée garantie.
+   * Il reste donc la lecture après hydratation, exactement comme
+   * `sourceDepuisUrl()`. Les deux valeurs sont validées contre les catalogues
+   * avant d'être appliquées : une URL bricolée à la main ne casse rien.
+   */
+  useEffect(() => {
+    let params: URLSearchParams;
+    try {
+      params = new URLSearchParams(window.location.search);
+    } catch {
+      return;
+    }
+
+    const modele = params.get("modele");
+    const format = params.get("format");
+
+    // Les deux `eslint-disable` ci-dessous sont assumés : la règle veut
+    // qu'on ne fasse pas de setState dans un effet, mais l'URL est une
+    // valeur navigateur — elle n'existe pas au prérendu, et c'est le seul
+    // endroit où la lire sans désynchroniser l'hydratation. Ça ne coûte
+    // qu'un rendu de plus, une seule fois, juste après l'hydratation.
+    if (modele && (TEMPLATE_KEYS as string[]).includes(modele)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTemplate(modele as AnnonceTemplate);
+    }
+
+    if (format && (REVEAL_MECHANIC_KEYS as string[]).includes(format)) {
+      setMechanics([format as RevealMechanic]);
+    }
+  }, []);
+
   const config = ANNONCE_TEMPLATES[template];
   const totalCents = computeAmountCents({
     formatCount: mechanics.length,
@@ -62,13 +107,15 @@ export function CreateScratchForm() {
 
   // Coche/décoche un format — on garde toujours au moins un format sélectionné.
   function toggleMechanic(key: RevealMechanic) {
-    setMechanics((prev) =>
-      prev.includes(key)
-        ? prev.length > 1
-          ? prev.filter((m) => m !== key)
-          : prev
-        : [...prev, key]
-    );
+    const next = mechanics.includes(key)
+      ? mechanics.length > 1
+        ? mechanics.filter((m) => m !== key)
+        : mechanics
+      : [...mechanics, key];
+    // Dernier format restant : on refuse de le décocher, rien ne change.
+    if (next === mechanics) return;
+    setMechanics(next);
+    track("creer_format_choisi", { format: key, total: next.length });
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -92,12 +139,23 @@ export function CreateScratchForm() {
     setCoverPreview(URL.createObjectURL(file));
     setCoverFileName(file.name);
     setFraming(DEFAULT_FRAMING);
+    // Premier vrai engagement du formulaire. On envoie l'occasion, jamais
+    // le nom du fichier : il contient très souvent un prénom ou une date.
+    track("creer_photo_ajoutee", { occasion: template });
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrorMsg(null);
     const form = new FormData(e.currentTarget);
+
+    // Dernier point mesurable côté client : après, on part chez Stripe.
+    // `cents` est le montant affiché, pas une donnée perso.
+    track("creer_soumis", { formats: mechanics.length, cents: totalCents });
+    // Un code cadeau saisi = pas de passage par Stripe. On note le fait,
+    // jamais la valeur du code.
+    if (giftCode.trim()) track("code_cadeau_utilise");
+
     startTransition(async () => {
       try {
         await createScratchAction(form);

@@ -1,25 +1,33 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site";
 
 /**
  * robots.txt généré dynamiquement.
  *
+ * L'URL vient de SITE_URL : avant, ce fichier retombait sur
+ * « quisygratte.fr » quand le layout utilisait « www.quisygratte.fr » —
+ * le sitemap déclaré ici et les canonicals des pages ne désignaient donc
+ * pas le même hôte.
+ *
  * On autorise tout l'indexage des pages marketing/produit, et on bloque
- * les pages personnelles (/g/[code] et /creer/merci/[code]) — ces URLs
- * sont des liens privés partagés directement aux destinataires, on ne
- * veut pas qu'elles apparaissent dans Google.
+ * les trois familles d'URL privées — /g/[code], /creer/merci/[code] et
+ * /creer/[code]/preview. Ce sont des liens personnels partagés de la main
+ * à la main, et l'aperçu montre en plus la photo et le texte d'une annonce
+ * PAS ENCORE PAYÉE : elle n'a rien à faire dans Google Images.
+ *
+ * Le Disallow n'est que l'économie de crawl ; la vraie protection est le
+ * `robots: { index: false }` posé dans le metadata de chaque page privée —
+ * c'est le seul qui tienne quand l'URL est atteinte par un lien externe.
  */
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://quisygratte.fr";
-
   return {
     rules: [
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/g/", "/creer/merci/"],
+        disallow: ["/g/", "/creer/merci/", "/creer/*/preview"],
       },
     ],
-    sitemap: `${siteUrl}/sitemap.xml`,
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

@@ -1,14 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import { track } from "@/lib/analytics";
 
-export function CopyLinkButton({ url }: { url: string }) {
+/**
+ * `formats` sert uniquement à qualifier l'event « lien copié ». L'URL, elle,
+ * ne part JAMAIS dans l'analytics : elle contient le code privé de la carte.
+ */
+export function CopyLinkButton({
+  url,
+  formats,
+}: {
+  url: string;
+  formats: number;
+}) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      track("lien_copie", { formats });
       // Reset l'état au bout de 2s
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -21,6 +33,7 @@ export function CopyLinkButton({ url }: { url: string }) {
       try {
         document.execCommand("copy");
         setCopied(true);
+        track("lien_copie", { formats });
         setTimeout(() => setCopied(false), 2000);
       } catch {
         /* tant pis */

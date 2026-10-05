@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { RevealCard } from "@/components/reveals/RevealCard";
 import { type RevealMechanic } from "@/components/reveals/types";
 import { Fireworks } from "@/components/Fireworks";
 import { MusicButton, useRevealMusic } from "@/components/RevealMusic";
+import { track } from "@/lib/analytics";
 
 interface ScratchExperienceProps {
   code: string;
@@ -36,6 +37,7 @@ const HEADLINE_VERB: Record<RevealMechanic, string> = {
 };
 
 export function ScratchExperience({
+  code,
   revealMechanic,
   coverImagePath,
   annonceMode,
@@ -53,6 +55,11 @@ export function ScratchExperience({
 }: ScratchExperienceProps) {
   const [revealed, setRevealed] = useState(false);
   const music = useRevealMusic();
+
+  // Toutes les cartes de démo (seed + seed-series) commencent par DEMO.
+  // Sans ce drapeau, les démos de la home noieraient le signal des vraies
+  // cartes reçues. Le code, lui, ne sort jamais d'ici.
+  const estDemo = code.startsWith("DEMO");
 
   const handleReveal = () => {
     setRevealed(true);
@@ -75,6 +82,21 @@ export function ScratchExperience({
   const verb = HEADLINE_VERB[mechanic];
 
   const showFireworks = revealed && withFireworks;
+
+  // Ouverture de la carte — le dénominateur du taux de révélation.
+  const ouvertureEnvoyee = useRef(false);
+  useEffect(() => {
+    if (ouvertureEnvoyee.current) return;
+    ouvertureEnvoyee.current = true;
+    track("carte_ouverte", { format: mechanic, demo: estDemo });
+  }, [mechanic, estDemo]);
+
+  // Boucle virale — il est allé au bout. onReveal est déjà garanti unique
+  // par chaque mécanique, mais `revealed` suffit comme déclencheur.
+  useEffect(() => {
+    if (!revealed) return;
+    track("carte_revelee", { format: mechanic, demo: estDemo });
+  }, [revealed, mechanic, estDemo]);
 
   return (
     <>
@@ -125,7 +147,15 @@ export function ScratchExperience({
             Crée ta propre carte
             <span className="text-[var(--color-gold)]"> à gratter</span>.
           </h2>
-          <Link href="/creer" className="btn-primary">
+          {/* `?src=carte` : c'est ce qui permet à /creer de savoir qu'un
+              visiteur vient d'une carte reçue — l'event pivot de la boucle. */}
+          <Link
+            href="/creer?src=carte"
+            className="btn-primary"
+            onClick={() =>
+              track("carte_cta_creer_clic", { format: mechanic, demo: estDemo })
+            }
+          >
             Créer ma carte ▸
           </Link>
         </div>

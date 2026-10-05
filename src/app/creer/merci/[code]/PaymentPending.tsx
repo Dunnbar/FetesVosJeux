@@ -35,7 +35,7 @@ export function PaymentPending({ code: _code }: { code: string }) {
   return (
     <main className="flex-1 flex items-center justify-center px-6 py-20">
       <div className="max-w-md text-center">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-gold-deep)] mb-6">
+        <p className="font-mono text-xs uppercase tracking-[0.3em] text-[var(--color-gold-text)] mb-6">
           ◆ Paiement en cours
         </p>
         <div className="mx-auto mb-6 w-12 h-12 rounded-full border-2 border-[var(--color-edge)] border-t-[var(--color-rose-deep)] animate-spin" />
