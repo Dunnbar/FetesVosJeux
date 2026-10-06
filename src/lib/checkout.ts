@@ -16,7 +16,7 @@ import { sendScratchLinkEmail } from "@/lib/email";
 /**
  * Une seule source pour l'URL publique (src/lib/site.ts). Avant, ce fichier
  * retombait sur localhost:3000 quand le reste du site retombait sur
- * www.quisygratte.fr : un build sans NEXT_PUBLIC_SITE_URL avait un SEO sain
+ * www.quisygratte.fr : un build sans SITE_URL avait un SEO sain
  * ET renvoyait l'acheteur de Stripe sur localhost.
  */
 const siteUrl = () => SITE_URL;

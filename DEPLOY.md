@@ -78,7 +78,7 @@ Dans le dashboard Vercel de ton projet :
 | `DIRECT_URL` | URL direct de Neon (étape 2) |
 | `RESEND_API_KEY` | Ta clé Resend |
 | `EMAIL_FROM` | `Qui S'y Gratte <bonjour@ton-domaine.fr>` (ou `onboarding@resend.dev` au début) |
-| `NEXT_PUBLIC_SITE_URL` | `https://ton-domaine.fr` (à changer après l'étape 6) |
+| `SITE_URL` | `https://ton-domaine.fr` (à changer après l'étape 6) |
 
 `BLOB_READ_WRITE_TOKEN` sera injecté automatiquement après l'étape 3.
 
@@ -149,11 +149,11 @@ dans PlanetHoster comme nameservers du domaine.
 
 ---
 
-## 7. Mettre à jour `NEXT_PUBLIC_SITE_URL`
+## 7. Mettre à jour `SITE_URL`
 
 Une fois le domaine branché :
 1. Vercel → **Settings** → **Environment Variables**
-2. Édite `NEXT_PUBLIC_SITE_URL` → `https://www.quisygratte.fr`
+2. Édite `SITE_URL` → `https://www.quisygratte.fr`
    ⚠️ **avec le `www`**. L'apex `quisygratte.fr` répond 308 vers `www` : un
    canonical, un sitemap ou un `og:url` sur l'apex désignent donc une URL de
    redirection, que Search Console classe en « Page avec redirection ».

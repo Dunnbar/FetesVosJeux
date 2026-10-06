@@ -4,11 +4,11 @@
  * Avant ce fichier, l'URL était écrite à trois endroits et PAS de la même
  * façon : le layout racine retombait sur « www.quisygratte.fr », sitemap.ts
  * et robots.ts sur « quisygratte.fr » sans www. Résultat, si
- * NEXT_PUBLIC_SITE_URL n'est pas définie, le canonical et le sitemap
+ * SITE_URL n'est pas définie, le canonical et le sitemap
  * désignent deux hôtes différents — Google y voit deux sites et dilue le
  * jus de chaque page. Tout le monde passe désormais par SITE_URL.
  */
-const brut = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.quisygratte.fr";
+const brut = process.env.SITE_URL ?? "https://www.quisygratte.fr";
 
 /**
  * L'apex quisygratte.fr répond 308 vers www.quisygratte.fr : c'est www qui
