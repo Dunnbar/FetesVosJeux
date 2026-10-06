@@ -43,6 +43,17 @@ export const metadata: Metadata = {
     title,
     description,
   },
+  // Revendication du domaine chez Pinterest : prouve qu'on possède
+  // quisygratte.fr, ce qui débloque les stats d'épingles et l'attribution du
+  // profil sur les épingles pointant vers le site. Le jeton est public (il est
+  // lu dans le HTML servi), donc pas de variable d'environnement.
+  // Posée sur le layout racine : Pinterest ne vérifie que la home, mais
+  // l'héritage des metadata la place sur toutes les pages, ce qui est sans effet.
+  verification: {
+    other: {
+      "p:domain_verify": "d49ef82132921cacebf1dd76ac5841b4",
+    },
+  },
 };
 
 export default function RootLayout({
