@@ -12,9 +12,9 @@
 //      couleur de l'occasion, marque + quisygratte.fr en bas.
 //
 // Tourne SANS serveur de dev : par défaut tout est capturé contre la PROD.
-// Les photos /uploads/demo-*.jpg ne sont pas déployées (untracked dans git →
-// 404 en prod), donc on les sert depuis public/ via page.route(). Voir
-// serveLocalUploads() ci-dessous.
+// Les photos /uploads/demo-*.jpg y sont servies depuis le commit dc14889 ;
+// serveLocalUploads() les sert malgré tout depuis public/ quand elles existent
+// en local, ce qui permet de prévisualiser un visuel pas encore déployé.
 //
 // Usage :
 //   node scripts/make-pins.mjs                      toute la série (13 épingles)
@@ -29,7 +29,12 @@
 //   PIN_OUT=pins                 dossier de sortie (défaut : pins/)
 //
 // Prérequis : Playwright + Chromium (`npx playwright install chromium`).
-// Sortie : pins/<slug>.png, pins/pins.json, pins/pins.csv — dossier ignoré par git.
+// Sorties :
+//   pins/<slug>.png        aperçu local, dossier ignoré par git
+//   pins/pins.json         manifeste
+//   pins/pins.csv          prêt à importer (colonne « Media URL » remplie)
+//   public/pins/<slug>.jpg copie servie par le site — c'est ELLE que Pinterest
+//                          télécharge à l'import ; à committer et déployer.
 
 import { chromium } from "playwright";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
@@ -54,6 +59,12 @@ const ONLY = process.argv[2];
 // On ne pointe JAMAIS vers /g/<CODE> : ces pages sont en robots noindex.
 // Le www est explicite : l'apex renvoie un 308, autant épargner le saut.
 const PIN_HOST = `https://www.${BRAND.domain}`;
+// Les JPEG servis par le site, que Pinterest télécharge à l'import. Doivent
+// être déployés AVANT d'importer le CSV, sinon chaque ligne échoue sur
+// « URL de média manquante ».
+const PUBLIC_PINS_DIR = path.resolve("public/pins");
+const PIN_MEDIA_BASE = process.env.PIN_MEDIA_BASE || `${PIN_HOST}/pins`;
+const mediaUrl = (m) => `${PIN_MEDIA_BASE}/${m.file.replace(/\.png$/, ".jpg")}`;
 const PIN_TARGET = (urlSlug) =>
   `${PIN_HOST}/idees/${urlSlug}` +
   `?utm_source=pinterest&utm_medium=social&utm_campaign=pins&utm_content=${urlSlug}`;
@@ -359,7 +370,7 @@ function buildPinOverlay(d) {
   }
 }
 
-async function renderPin(browser, { cardPng, clip, pin, outPath }) {
+async function renderPin(browser, { cardPng, clip, pin, outPath, jpegPath }) {
   const ctx = await browser.newContext({ viewport: PIN, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
   // On passe par une page du site uniquement pour hériter de --font-display /
@@ -380,6 +391,12 @@ async function renderPin(browser, { cardPng, clip, pin, outPath }) {
   await page.evaluate(() => document.fonts?.ready).catch(() => {});
   await page.waitForTimeout(600);
   await page.screenshot({ path: outPath }); // viewport 1000×1500 → PNG 1000×1500
+  if (jpegPath) {
+    // Copie JPEG pour public/pins/ : ~3× plus légère que le PNG à dimensions
+    // égales, ce qui évite d'alourdir le dépôt. Playwright encode nativement,
+    // pas de dépendance d'image à installer.
+    await page.screenshot({ path: jpegPath, type: "jpeg", quality: 85 });
+  }
   await ctx.close();
 }
 
@@ -427,9 +444,10 @@ function csvCell(v) {
 
 // Gabarit « Bulk create Pins » de Pinterest. ⚠️ Pinterest fait évoluer ces
 // intitulés : vérifie-les dans ton hub Business avant le premier import, un
-// en-tête non conforme fait rejeter tout le fichier. « Media URL » reste vide
-// (le bulk create exige une URL publique, pas un fichier local) : pour un
-// premier batch, glisse-dépose les PNG et recopie titre + description d'ici.
+// en-tête non conforme fait rejeter tout le fichier (vérifié contre le modèle
+// officiel : s.pinimg.com/sub/helpcenter/assets/pinterest-bulk-upload-sample.csv).
+// « Media URL » pointe vers public/pins/<slug>.jpg servi par le site : le bulk
+// create télécharge l'image, il ne lit pas de fichier local.
 function toPinterestCsv(manifest) {
   const header = [
     "Title",
@@ -444,13 +462,16 @@ function toPinterestCsv(manifest) {
   const rows = manifest.map((m) =>
     [
       m.title,
-      "",
+      mediaUrl(m),
       m.board,
       "",
       m.description,
       m.link,
       "",
-      m.keywords.join(";"),
+      // Virgules et non points-virgules : c'est ce qu'attend Pinterest, et le
+      // modèle officiel le confirme ("world, earth"). csvCell met la cellule
+      // entre guillemets puisqu'elle contient des virgules.
+      m.keywords.join(", "),
     ]
       .map(csvCell)
       .join(",")
@@ -460,6 +481,7 @@ function toPinterestCsv(manifest) {
 
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
+  await mkdir(PUBLIC_PINS_DIR, { recursive: true });
   const only = ONLY ? ONLY.split(",").map((s) => s.trim()) : null;
   const clips = only ? CLIPS.filter((c) => only.includes(c.code)) : CLIPS;
   if (!clips.length) throw new Error(`aucune occasion pour "${ONLY}"`);
@@ -484,6 +506,7 @@ async function main() {
       clip,
       pin,
       outPath: path.join(OUT_DIR, file),
+      jpegPath: path.join(PUBLIC_PINS_DIR, `${clip.slug}.jpg`),
     });
     manifest.push(buildPinMeta(clip, pin, file));
     console.log(`  ✔ ${path.relative(process.cwd(), path.join(OUT_DIR, file))}`);
@@ -497,6 +520,9 @@ async function main() {
   await writeFile(path.join(OUT_DIR, "pins.csv"), toPinterestCsv(manifest));
   console.log(
     `\n✅ ${manifest.length} épingle(s) + pins.json + pins.csv dans ${path.relative(process.cwd(), OUT_DIR)}/`
+  );
+  console.log(
+    `   ${manifest.length} JPEG dans public/pins/ — à committer et déployer AVANT d'importer le CSV.`
   );
 }
 
